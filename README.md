@@ -13,7 +13,7 @@ apiVersion: source.toolkit.fluxcd.io/v1
 kind: GitRepository
 metadata:
   name: dm-gitops-dev
-  namespace: kommander
+  namespace: dept-1-tenant-namespace
 spec:
   interval: 5s
   ref:
@@ -27,13 +27,13 @@ apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
   name: dm-gitops-dev-demo
-  namespace: kommander
+  namespace: dept-1-tenant-namespace
 spec:
   interval: 5s
   path: ./
   prune: true
   sourceRef:
    kind: GitRepository
-   name: gitops-demo
-   namespace: kommander
+   name: dm-gitops-dev
+   namespace: dept-1-tenant-namespace
 EOF
