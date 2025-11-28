@@ -3,6 +3,10 @@ kind: Workspace
 metadata:
   creationTimestamp: null
   name: dept-1-workspace
+  annotations:
+    workspace.kommander.mesosphere.io/allow-existing-namespace: "true"
+  labels:
+    caren.nutanix.com/namespace-sync: ""
 spec:
   namespaceName: dept-1-tenant-namespace
 status: {}

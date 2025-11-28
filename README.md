@@ -1,4 +1,5 @@
  <!-- Apply this first -->
+ <pre>
 kubectl apply -f -  <<EOF
 apiVersion: v1
 kind: Namespace
@@ -7,7 +8,9 @@ metadata:
 spec: {}
 status: {}
 EOF
+</pre>
 
+<pre>
 kubectl apply -f -  <<EOF
 apiVersion: source.toolkit.fluxcd.io/v1
 kind: GitRepository
@@ -21,7 +24,9 @@ spec:
   timeout: 20s
   url: https://github.com/deepak-muley/dm-gitops-dev.git
 EOF
+</pre>
 
+<pre>
 kubectl apply -f -  <<EOF
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
@@ -37,3 +42,4 @@ spec:
    name: dm-gitops-dev
    namespace: dept-1-tenant-namespace
 EOF
+</pre>
