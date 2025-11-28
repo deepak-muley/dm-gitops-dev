@@ -4,4 +4,3 @@ resources:
   - apps
   - clusters
   - nkp-tenant-as-workspaces
-  - nkp-tenant-namespaces

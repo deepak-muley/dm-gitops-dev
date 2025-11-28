@@ -1,5 +1,5 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-  - dept-1-workspace
-  - gitops-git-repos
+  - dept-1-workspace/dept-1-workspace.yaml
+  - dept-1-workspace/projects/dept-1-project-1/dept-1-project-1.yaml
