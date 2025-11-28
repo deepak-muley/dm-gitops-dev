@@ -1,0 +1,13 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: gitops-workspaces
+  namespace: dept-1-tenant-namespace
+spec:
+  interval: 5s
+  path: ./nkp-tenant-as-workspaces
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: dm-gitops-dev-demo
+    namespace: dept-1-tenant-namespace
