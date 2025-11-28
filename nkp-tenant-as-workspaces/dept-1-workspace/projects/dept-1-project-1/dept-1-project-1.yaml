@@ -5,7 +5,7 @@ metadata:
     kommander.mesosphere.io/description: "Dept 1 Project 1"
     kommander.mesosphere.io/display-name: dept-1-project-1
   name: dept-1-project-1
-  namespace: dept-1-tenant-namespace
+  namespace: dept-1-workspace
 spec:
   namespaceName: dept-1-project-1
   placement:
