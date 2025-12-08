@@ -2,7 +2,7 @@ apiVersion: cluster.x-k8s.io/v1beta1
 kind: Cluster
 metadata:
   annotations:
-    caren.nutanix.com/cluster-uuid: 019af532-22a2-7ced-b4ff-7edbe6beb8bf
+    caren.nutanix.com/cluster-uuid: 019afba0-2a28-721d-a629-e2bad7650636
   labels:
     cluster.x-k8s.io/provider: nutanix
     konvoy.d2iq.io/cluster-name: dm-nkp-workload-2
@@ -32,7 +32,7 @@ spec:
             ccm:
               credentials:
                 secretRef:
-                  name: dm-nkp-workload-common-pc-credentials
+                  name: dm-nkp-workload-2-pc-credentials
               strategy: HelmAddon
             clusterAutoscaler:
               strategy: HelmAddon
@@ -49,7 +49,7 @@ spec:
                 nutanix:
                   credentials:
                     secretRef:
-                      name: dm-nkp-workload-common-pc-credentials-for-csi
+                      name: dm-nkp-workload-2-pc-credentials-for-csi
                   storageClassConfigs:
                     volume:
                       allowExpansion: true
@@ -61,14 +61,13 @@ spec:
                         storageContainer: default-container-92034737804854
                         storageType: NutanixVolumes
                       reclaimPolicy: Delete
-                      volumeBindingMode: WaitForFirstConsumer
                   strategy: HelmAddon
               snapshotController:
                 strategy: HelmAddon
             konnectorAgent:
               credentials:
                 secretRef:
-                  name: dm-nkp-workload-common-pc-credentials-for-konnector-agent
+                  name: dm-nkp-workload-2-pc-credentials-for-konnector-agent
             nfd:
               strategy: HelmAddon
             serviceLoadBalancer:
@@ -80,9 +79,6 @@ spec:
           controlPlane:
             autoRenewCertificates:
               daysBeforeExpiry: 180
-            nodeRegistration:
-              ignorePreflightErrors:
-                - SystemVerification
             nutanix:
               machineDetails:
                 bootType: uefi
@@ -107,7 +103,7 @@ spec:
           imageRegistries:
             - credentials:
                 secretRef:
-                  name: dm-nkp-workload-common-image-registry-credentials
+                  name: dm-nkp-workload-2-image-registry-credentials
               url: https://docker.io
           kubeProxy:
             mode: disabled
@@ -120,7 +116,7 @@ spec:
             prismCentralEndpoint:
               credentials:
                 secretRef:
-                  name: dm-nkp-workload-common-pc-credentials
+                  name: dm-nkp-workload-2-pc-credentials
               url: https://pc.dev.nkp.sh:9440
           users:
             - name: konvoy
@@ -141,9 +137,6 @@ spec:
             overrides:
               - name: workerConfig
                 value:
-                  nodeRegistration:
-                    ignorePreflightErrors:
-                      - SystemVerification
                   nutanix:
                     machineDetails:
                       bootType: uefi
