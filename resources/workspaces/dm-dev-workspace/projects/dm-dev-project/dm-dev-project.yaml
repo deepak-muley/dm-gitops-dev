@@ -11,6 +11,6 @@ spec:
   placement:
     clusterSelector:
       matchLabels:
-        env: test
+        cluster.x-k8s.io/provider: nutanix
   workspaceRef:
     name: dm-dev-workspace
