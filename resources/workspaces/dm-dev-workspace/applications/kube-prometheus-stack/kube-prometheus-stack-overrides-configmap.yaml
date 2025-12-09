@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: kube-prometheus-stack-config-overrides
-  namespace: kommander
+  namespace: dm-dev-workspace
 data:
   values.yaml: |
     prometheus:
