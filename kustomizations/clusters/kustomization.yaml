@@ -1,5 +1,4 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-  - ../../resources/workspaces/batcave/clusters
   - ../../resources/workspaces/dm-dev-workspace/clusters

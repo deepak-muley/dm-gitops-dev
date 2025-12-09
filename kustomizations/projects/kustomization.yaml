@@ -1,6 +1,4 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-- ../../resources/workspaces/batcave/projects
-- ../../resources/workspaces/oscorp/projects
-- ../../resources/workspaces/dm-dev-workspace/projects
+  - ../../resources/workspaces/dm-dev-workspace/projects

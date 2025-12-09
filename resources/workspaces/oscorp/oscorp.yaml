@@ -1,9 +1,0 @@
----
-apiVersion: workspaces.kommander.mesosphere.io/v1alpha1
-kind: Workspace
-metadata:
-  creationTimestamp: null
-  name: oscorp
-spec:
-  namespaceName: oscorp
-status: {}

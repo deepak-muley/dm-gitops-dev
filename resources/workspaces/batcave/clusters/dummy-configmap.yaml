@@ -1,7 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: foobar-clusters
-  namespace: batcave
-data:
-  foo: bar
