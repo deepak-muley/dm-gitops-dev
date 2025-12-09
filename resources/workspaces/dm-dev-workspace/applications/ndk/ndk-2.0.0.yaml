@@ -10,5 +10,12 @@ spec:
   appRef:
     kind: App
     name: ndk-2.0.0
+  clusterSelector:
+    matchExpressions:
+      - key: kommander.d2iq.io/cluster-name
+        operator: In
+        values:
+          - dm-nkp-workload-1
+          - dm-nkp-workload-2
   configOverrides:
     name: ndk-2.0.0-config-overrides

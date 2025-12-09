@@ -7,5 +7,15 @@ metadata:
     kustomize.toolkit.fluxcd.io/ssa: merge
     kustomize.toolkit.fluxcd.io/prune: disabled
 spec:
+  appRef:
+    kind: App
+    name: kube-prometheus-stack
+  clusterSelector:
+    matchExpressions:
+      - key: kommander.d2iq.io/cluster-name
+        operator: In
+        values:
+          - dm-nkp-workload-1
+          - dm-nkp-workload-2
   configOverrides:
     name: kube-prometheus-stack-config-overrides
