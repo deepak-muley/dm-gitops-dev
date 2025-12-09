@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: ndk-2.0.0-config-overrides
-  namespace: dm-dev-project
+  namespace: dm-dev-workspace
 data:
   values.yaml: |
 
