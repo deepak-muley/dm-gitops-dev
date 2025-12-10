@@ -102,3 +102,4 @@ spec:
           annotations:
             summary: "Loki Querier memory usage > 80%"
             description: "Loki querier {{ $labels.pod }} is using {{ $value | humanizePercentage }} of its memory limit"
+

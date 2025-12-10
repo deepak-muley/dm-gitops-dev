@@ -1,0 +1,19 @@
+apiVersion: apps.kommander.d2iq.io/v1alpha3
+kind: AppDeployment
+metadata:
+  name: project-grafana-loki
+  namespace: dm-dev-project
+spec:
+  appRef:
+    kind: ClusterApp
+    name: project-grafana-loki-0.80.5
+  clusterConfigOverrides:
+    - appVersion: 0.80.5
+      clusterSelector:
+        matchExpressions:
+          - key: kommander.d2iq.io/cluster-name
+            operator: In
+            values:
+              - host-cluster
+      configMapName: project-grafana-loki-overrides
+

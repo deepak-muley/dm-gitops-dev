@@ -4,3 +4,4 @@ resources:
   - project-grafana-loki.yaml
   - project-grafana-loki-overrides-configmap.yaml
   - project-grafana-loki-memory-alerts.yaml
+

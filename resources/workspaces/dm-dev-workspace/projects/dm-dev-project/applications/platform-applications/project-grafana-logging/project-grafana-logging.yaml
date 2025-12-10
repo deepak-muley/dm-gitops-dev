@@ -1,0 +1,18 @@
+apiVersion: apps.kommander.d2iq.io/v1alpha3
+kind: AppDeployment
+metadata:
+  name: project-grafana-logging
+  namespace: dm-dev-project
+spec:
+  appRef:
+    kind: ClusterApp
+    name: project-grafana-logging-10.1.2
+  clusterConfigOverrides:
+    - appVersion: 10.1.2
+      clusterSelector:
+        matchExpressions:
+          - key: kommander.d2iq.io/cluster-name
+            operator: In
+            values:
+              - host-cluster
+      configMapName: ""

@@ -77,3 +77,4 @@ data:
         chunk_idle_period: 15m
         chunk_retain_period: 30s
         max_chunk_age: 1h
+
