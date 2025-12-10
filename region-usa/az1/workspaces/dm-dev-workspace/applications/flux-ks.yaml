@@ -6,6 +6,8 @@ metadata:
 spec:
   dependsOn:
     - name: clusterops-workspaces
+    # Wait for clusters to be created before deploying workspace applications
+    - name: clusterops-clusters
   interval: 5s
   path: ./region-usa/az1/workspaces/dm-dev-workspace/applications
   prune: true

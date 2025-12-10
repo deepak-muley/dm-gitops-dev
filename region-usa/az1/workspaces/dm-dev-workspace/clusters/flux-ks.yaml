@@ -6,6 +6,8 @@ metadata:
 spec:
   dependsOn:
     - name: clusterops-workspaces
+    # Wait for sealed-secrets to create credential secrets before cluster creation
+    - name: clusterops-sealed-secrets
   interval: 5s
   path: ./region-usa/az1/workspaces/dm-dev-workspace/clusters
   prune: true

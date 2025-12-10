@@ -7,6 +7,8 @@ spec:
   dependsOn:
     # Wait for project namespaces to be created by the Workspace controller
     - name: clusterops-project-definitions
+    # Wait for workspace applications (which depend on clusters)
+    - name: clusterops-workspace-applications
   interval: 5s
   retryInterval: 30s
   path: ./region-usa/az1/workspaces/dm-dev-workspace/projects/dm-dev-project/applications
