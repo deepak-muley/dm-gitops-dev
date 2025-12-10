@@ -6,6 +6,8 @@ metadata:
 spec:
   dependsOn:
     - name: clusterops-workspaces
+    # Wait for sealed-secrets controller to be installed (CRDs and controller)
+    - name: clusterops-sealed-secrets-controller
   interval: 5s
   path: ./region-usa/az1/workspaces/dm-dev-workspace/clusters/sealed-secrets
   prune: true

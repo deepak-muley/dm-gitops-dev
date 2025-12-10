@@ -7,8 +7,3 @@ data:
   values.yaml: |
     imageCredentials:
       name: ndk-image-pull-secret
-      credentials:
-        registry: https://index.docker.io/v1/
-        username: <YOUR_DOCKER_USERNAME>
-        password: <YOUR_DOCKER_PASSWORD>
-        email: <YOUR_EMAIL>

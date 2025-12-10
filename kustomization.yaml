@@ -5,6 +5,7 @@ resources:
   - region-usa/az1/namespaces/dm-nkp-gitops-namespace.yaml
   # Flux Kustomization resources (each lives alongside its resources)
   - region-usa/az1/global/flux-ks.yaml
+  - region-usa/az1/global/sealed-secrets-controller/flux-ks.yaml
   - region-usa/az1/workspaces/flux-ks.yaml
   - region-usa/az1/workspaces/dm-dev-workspace/applications/flux-ks.yaml
   - region-usa/az1/workspaces/dm-dev-workspace/clusters/flux-ks.yaml
