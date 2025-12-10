@@ -1,0 +1,104 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: project-loki-memory-alerts
+  namespace: dm-dev-project
+  labels:
+    app: kube-prometheus-stack
+    release: kube-prometheus-stack
+spec:
+  groups:
+    - name: loki-memory
+      rules:
+        # Alert when Loki ingester memory usage is high (>80% of limit)
+        - alert: LokiIngesterHighMemory
+          expr: |
+            (
+              container_memory_working_set_bytes{namespace="kommander", pod=~"grafana-loki-loki-distributed-ingester.*", container="ingester"}
+              / on(pod) group_left()
+              kube_pod_container_resource_limits{namespace="kommander", pod=~"grafana-loki-loki-distributed-ingester.*", resource="memory"}
+            ) > 0.8
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Loki Ingester memory usage > 80%"
+            description: "Loki ingester {{ $labels.pod }} is using {{ $value | humanizePercentage }} of its memory limit"
+
+        # Critical alert - approaching OOM (>95% of limit)
+        - alert: LokiIngesterCriticalMemory
+          expr: |
+            (
+              container_memory_working_set_bytes{namespace="kommander", pod=~"grafana-loki-loki-distributed-ingester.*", container="ingester"}
+              / on(pod) group_left()
+              kube_pod_container_resource_limits{namespace="kommander", pod=~"grafana-loki-loki-distributed-ingester.*", resource="memory"}
+            ) > 0.95
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Loki Ingester approaching OOM!"
+            description: "Loki ingester {{ $labels.pod }} is at {{ $value | humanizePercentage }} memory - imminent OOM risk"
+
+        # Alert when Loki ingester memory exceeds absolute threshold (10GiB)
+        - alert: LokiIngesterMemoryAbsolute
+          expr: |
+            container_memory_working_set_bytes{namespace="kommander", pod=~"grafana-loki-loki-distributed-ingester.*", container="ingester"} > 10737418240
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Loki Ingester using > 10GiB memory"
+            description: "Loki ingester {{ $labels.pod }} is using {{ $value | humanize1024 }}B of memory"
+
+        # Alert on high ingestion rate (>10MB/s)
+        - alert: LokiHighIngestionRate
+          expr: |
+            sum(rate(loki_distributor_bytes_received_total{namespace="kommander"}[5m])) > 10485760
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Loki ingestion rate > 10MB/s"
+            description: "High log ingestion rate may cause memory pressure"
+
+        # Alert when streams are being rate limited
+        - alert: LokiIngesterRateLimited
+          expr: |
+            sum(rate(loki_discarded_samples_total{namespace="kommander"}[5m])) > 0
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Loki is dropping logs due to rate limiting"
+            description: "{{ $value }} samples/s being dropped"
+
+        # Alert when Loki distributor memory is high
+        - alert: LokiDistributorHighMemory
+          expr: |
+            (
+              container_memory_working_set_bytes{namespace="kommander", pod=~"grafana-loki-loki-distributed-distributor.*", container="distributor"}
+              / on(pod) group_left()
+              kube_pod_container_resource_limits{namespace="kommander", pod=~"grafana-loki-loki-distributed-distributor.*", resource="memory"}
+            ) > 0.8
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Loki Distributor memory usage > 80%"
+            description: "Loki distributor {{ $labels.pod }} is using {{ $value | humanizePercentage }} of its memory limit"
+
+        # Alert when Loki querier memory is high
+        - alert: LokiQuerierHighMemory
+          expr: |
+            (
+              container_memory_working_set_bytes{namespace="kommander", pod=~"grafana-loki-loki-distributed-querier.*", container="querier"}
+              / on(pod) group_left()
+              kube_pod_container_resource_limits{namespace="kommander", pod=~"grafana-loki-loki-distributed-querier.*", resource="memory"}
+            ) > 0.8
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Loki Querier memory usage > 80%"
+            description: "Loki querier {{ $labels.pod }} is using {{ $value | humanizePercentage }} of its memory limit"
