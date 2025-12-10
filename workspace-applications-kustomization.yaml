@@ -2,15 +2,17 @@ apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
   name: clusterops-workspace-applications
-  namespace: kommander
+  namespace: dm-nkp-gitops
 spec:
   dependsOn:
-  - name: clusterops-workspaces
-    namespace: kommander
+    - name: clusterops-namespaces
+      namespace: kommander
+    - name: clusterops-workspaces
+      namespace: dm-nkp-gitops
   interval: 5s
   path: ./kustomizations/workspaces/applications
   prune: true
   sourceRef:
-   kind: GitRepository
-   name: gitops-demo
-   namespace: kommander
+    kind: GitRepository
+    name: gitops-demo
+    namespace: kommander
