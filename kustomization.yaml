@@ -3,14 +3,5 @@ kind: Kustomization
 resources:
   # Create the namespace first (applied directly, not via Flux Kustomization)
   - resources/namespaces/dm-nkp-gitops-namespace.yaml
-  # Then create Flux Kustomizations in dm-nkp-gitops namespace
-  - global-kustomization.yaml
-  - workspaces-kustomization.yaml
-  - workspace-rbac-kustomization.yaml
-  - workspace-networkpolicies-kustomization.yaml
-  - workspace-resourcequotas-kustomization.yaml
-  - workspace-applications-kustomization.yaml
-  - projects-definitions-kustomization.yaml
-  - projects-applications-kustomization.yaml
-  - sealed-secrets-kustomization.yaml
-  - clusters-kustomization.yaml
+  # All Flux Kustomizations are organized in flux-kustomizations/
+  - flux-kustomizations

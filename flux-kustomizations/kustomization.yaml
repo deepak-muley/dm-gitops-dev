@@ -1,0 +1,18 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  # All Flux Kustomization resources in dependency order
+  # Level 0: No dependencies
+  - global.yaml
+  - workspaces.yaml
+  - sealed-secrets.yaml
+  # Level 1: Depends on workspaces
+  - workspace-rbac.yaml
+  - workspace-networkpolicies.yaml
+  - workspace-resourcequotas.yaml
+  - workspace-applications.yaml
+  - clusters.yaml
+  - project-definitions.yaml
+  # Level 2: Depends on project-definitions
+  - project-applications.yaml
+

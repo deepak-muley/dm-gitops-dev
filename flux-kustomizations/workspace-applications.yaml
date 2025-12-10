@@ -1,15 +1,16 @@
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: clusterops-workspace-rbac
+  name: clusterops-workspace-applications
   namespace: dm-nkp-gitops
 spec:
   dependsOn:
     - name: clusterops-workspaces
   interval: 5s
-  path: ./kustomizations/workspace-rbac
+  path: ./kustomizations/workspaces/applications
   prune: true
   sourceRef:
     kind: GitRepository
     name: gitops-demo
     namespace: kommander
+

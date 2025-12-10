@@ -1,15 +1,16 @@
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: clusterops-workspace-applications
+  name: clusterops-workspace-resourcequotas
   namespace: dm-nkp-gitops
 spec:
   dependsOn:
     - name: clusterops-workspaces
   interval: 5s
-  path: ./kustomizations/workspaces/applications
+  path: ./kustomizations/workspace-resourcequotas
   prune: true
   sourceRef:
     kind: GitRepository
     name: gitops-demo
     namespace: kommander
+
