@@ -3,9 +3,8 @@ kind: Kustomization
 
 resources:
   - ../../bases/dm-nkp-workload-1.yaml
-  - ../../bases/dm-nkp-workload-1-sealed-secrets.yaml
   - ../../bases/dm-nkp-workload-2.yaml
-  - ../../bases/dm-nkp-workload-2-sealed-secrets.yaml
+  # Sealed secrets are now applied via separate clusterops-sealed-secrets kustomization
 
 patches:
   - path: dm-nkp-workload-1-patch.yaml

@@ -11,4 +11,5 @@ resources:
   - workspace-resourcequotas-kustomization.yaml
   - workspace-applications-kustomization.yaml
   - projects-kustomization.yaml
+  - sealed-secrets-kustomization.yaml
   - clusters-kustomization.yaml
