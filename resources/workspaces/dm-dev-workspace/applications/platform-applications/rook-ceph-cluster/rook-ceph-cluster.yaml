@@ -1,0 +1,19 @@
+apiVersion: apps.kommander.d2iq.io/v1alpha3
+kind: AppDeployment
+metadata:
+  name: rook-ceph-cluster
+  namespace: dm-dev-workspace
+spec:
+  appRef:
+    kind: ClusterApp
+    name: rook-ceph-cluster-1.18.6
+  clusterConfigOverrides:
+    - appVersion: 1.18.6
+      clusterSelector:
+        matchExpressions:
+          - key: kommander.d2iq.io/workspace-name
+            operator: In
+            values:
+              - dm-dev-workspace
+      configMapName: ""
+
