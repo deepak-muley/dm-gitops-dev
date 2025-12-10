@@ -2,10 +2,9 @@ apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
   name: clusterops-workspace-networkpolicies
-  namespace: kommander
+  namespace: dm-nkp-gitops
 spec:
   dependsOn:
-    - name: clusterops-namespaces
     - name: clusterops-workspaces
   interval: 5s
   path: ./kustomizations/workspace-networkpolicies

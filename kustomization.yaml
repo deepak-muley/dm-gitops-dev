@@ -1,7 +1,9 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-  - namespaces-kustomization.yaml
+  # Create the namespace first (applied directly, not via Flux Kustomization)
+  - resources/namespaces/dm-nkp-gitops-namespace.yaml
+  # Then create Flux Kustomizations in dm-nkp-gitops namespace
   - global-kustomization.yaml
   - workspaces-kustomization.yaml
   - workspace-rbac-kustomization.yaml
