@@ -2,7 +2,7 @@
 
 The objective of this project is to provide guidance on using gitops to manage NKP Management Cluster resources like:
 - Workspaces & Workspace RBAC
-- Projects & Workspace RBAC
+- Projects & Project RBAC
 - Clusters
 
 ## Bootstrap
@@ -27,113 +27,131 @@ kubectl apply -f bootstrap.yaml
 - **GitRepository** `gitops-demo` in `kommander` namespace - points to this repo
 - **Kustomization** `clusterops-demo` in `kommander` namespace - applies all GitOps manifests
 
-Here is the structure of the folders and files.
+## Repository Structure
 
-> Note: The GitRepository and root Kustomization (`clusterops-demo`) run in `kommander` namespace.
-> All child Flux Kustomizations run in `dm-nkp-gitops` namespace and depend on `clusterops-namespaces` to create that namespace first.
+The repository is organized into three main directories:
+
+| Directory | Purpose |
+|-----------|---------|
+| `kustomizations/` | Flux Kustomization resources (`flux-ks.yaml`) and kustomize entry points (`kustomization.yaml`) |
+| `resources/` | Actual Kubernetes resources (Workspaces, Clusters, Projects, etc.) |
+
+Each `kustomizations/*` directory contains:
+- `flux-ks.yaml` - The Flux Kustomization resource that tells Flux to reconcile this path
+- `kustomization.yaml` - The kustomize configuration that references actual resources
 
 ```
 .
-├── bootstrap.yaml                         # Apply this once to bootstrap GitOps (not managed by GitOps)
-├── kustomization.yaml
-├── namespaces-kustomization.yaml          # Creates dm-nkp-gitops namespace (runs in kommander)
-├── global-kustomization.yaml              # Runs in dm-nkp-gitops
-├── workspaces-kustomization.yaml          # Runs in dm-nkp-gitops
-├── workspace-rbac-kustomization.yaml      # Runs in dm-nkp-gitops
-├── workspace-networkpolicies-kustomization.yaml
-├── workspace-resourcequotas-kustomization.yaml
-├── workspace-applications-kustomization.yaml
-├── projects-kustomization.yaml
-├── clusters-kustomization.yaml
-├── README.md
-├── kustomizations
-│   ├── clusters
+├── bootstrap.yaml                    # Apply once to bootstrap GitOps (not managed by GitOps)
+├── kustomization.yaml                # Root kustomization - references all flux-ks.yaml files
+├── kustomizations/
+│   ├── clusters/
+│   │   ├── flux-ks.yaml              # Flux Kustomization for clusters
+│   │   └── kustomization.yaml        # References resources/workspaces/*/clusters
+│   ├── global/
+│   │   ├── flux-ks.yaml
 │   │   └── kustomization.yaml
-│   ├── global
+│   ├── project-applications/
+│   │   ├── flux-ks.yaml              # Depends on project-definitions
 │   │   └── kustomization.yaml
-│   ├── projects
+│   ├── project-definitions/
+│   │   ├── flux-ks.yaml              # Depends on workspaces
 │   │   └── kustomization.yaml
-│   ├── workspace-networkpolicies
+│   ├── sealed-secrets/
+│   │   ├── flux-ks.yaml
 │   │   └── kustomization.yaml
-│   ├── workspace-rbac
+│   ├── workspace-networkpolicies/
+│   │   ├── flux-ks.yaml
 │   │   └── kustomization.yaml
-│   ├── workspace-resourcequotas
+│   ├── workspace-rbac/
+│   │   ├── flux-ks.yaml
 │   │   └── kustomization.yaml
-│   └── workspaces
-│       ├── applications
+│   ├── workspace-resourcequotas/
+│   │   ├── flux-ks.yaml
+│   │   └── kustomization.yaml
+│   └── workspaces/
+│       ├── applications/
+│       │   ├── flux-ks.yaml
 │       │   └── kustomization.yaml
+│       ├── flux-ks.yaml
 │       └── kustomization.yaml
-└── resources
-    ├── namespaces
-    │   ├── kustomization.yaml
-    │   └── dm-nkp-gitops-namespace.yaml
-    ├── global
+└── resources/
+    ├── global/
     │   ├── kustomization.yaml
     │   └── virtualgroups.yaml
-    └── workspaces
+    ├── namespaces/
+    │   ├── dm-nkp-gitops-namespace.yaml
+    │   └── kustomization.yaml
+    └── workspaces/
         ├── kustomization.yaml
-        └── dm-dev-workspace
+        └── dm-dev-workspace/
             ├── dm-dev-workspace.yaml
-            ├── applications
+            ├── applications/
             │   ├── kustomization.yaml
-            │   ├── nkp-nutanix-products-catalog-applications
-            │   │   ├── kustomization.yaml
-            │   │   └── ndk
-            │   │       ├── kustomization.yaml
-            │   │       ├── ndk-2.0.0-config-overrides.yaml
-            │   │       └── ndk-2.0.0.yaml
-            │   └── platform-applications
-            │       ├── kustomization.yaml
-            │       ├── kube-prometheus-stack
-            │       │   ├── kustomization.yaml
-            │       │   ├── kube-prometheus-stack.yaml
-            │       │   └── kube-prometheus-stack-overrides-configmap.yaml
-            │       ├── rook-ceph
-            │       │   ├── kustomization.yaml
-            │       │   └── rook-ceph.yaml
-            │       └── rook-ceph-cluster
-            │           ├── kustomization.yaml
-            │           └── rook-ceph-cluster.yaml
-            ├── clusters
+            │   ├── nkp-nutanix-products-catalog-applications/
+            │   │   └── ndk/
+            │   │       ├── ndk-2.0.0.yaml
+            │   │       └── ndk-2.0.0-config-overrides.yaml
+            │   └── platform-applications/
+            │       ├── kube-prometheus-stack/
+            │       ├── rook-ceph/
+            │       └── rook-ceph-cluster/
+            ├── clusters/
             │   ├── kustomization.yaml
-            │   ├── bases
-            │   │   ├── kustomization.yaml
-            │   │   ├── README.md
+            │   ├── bases/
             │   │   ├── dm-nkp-workload-1.yaml
             │   │   ├── dm-nkp-workload-1-sealed-secrets.yaml
             │   │   ├── dm-nkp-workload-2.yaml
-            │   │   ├── dm-nkp-workload-2-sealed-secrets.yaml
-            │   │   └── sealed-secrets-public-key.pem
-            │   └── overlays
-            │       └── 2.17.0-rc1
-            │           ├── kustomization.yaml
-            │           ├── dm-nkp-workload-1-patch.yaml
-            │           └── dm-nkp-workload-2-patch.yaml
-            ├── networkpolicies
-            │   ├── kustomization.yaml
+            │   │   └── dm-nkp-workload-2-sealed-secrets.yaml
+            │   └── overlays/
+            │       └── 2.17.0-rc1/
+            ├── networkpolicies/
             │   └── deny-cross-workspace-traffic.yaml
-            ├── projects
-            │   ├── kustomization.yaml
-            │   └── dm-dev-project
+            ├── projects/
+            │   └── dm-dev-project/
             │       ├── dm-dev-project.yaml
-            │       └── applications
-            │           └── platform-applications
-            │               ├── kustomization.yaml
-            │               ├── project-grafana-loki
-            │               │   ├── kustomization.yaml
-            │               │   ├── project-grafana-loki.yaml
-            │               │   ├── project-grafana-loki-overrides-configmap.yaml
-            │               │   └── project-grafana-loki-memory-alerts.yaml
-            │               ├── project-logging
-            │               │   ├── kustomization.yaml
-            │               │   └── project-logging.yaml
-            │               └── project-grafana-logging
-            │                   ├── kustomization.yaml
-            │                   └── project-grafana-logging.yaml
-            ├── rbac
-            │   ├── kustomization.yaml
+            │       └── applications/
+            │           └── platform-applications/
+            │               ├── project-grafana-loki/
+            │               ├── project-logging/
+            │               └── project-grafana-logging/
+            ├── rbac/
             │   └── dm-dev-workspace-superheros-rolebinding.yaml
-            └── resourcequotas
-                ├── kustomization.yaml
+            └── resourcequotas/
                 └── dm-dev-workspace-quota.yaml
 ```
+
+## Flux Kustomization Dependencies
+
+The Flux Kustomizations are applied in order based on dependencies:
+
+```
+Level 0 (No dependencies):
+  ├── clusterops-global
+  └── clusterops-workspaces
+
+Level 1 (Depends on workspaces):
+  ├── clusterops-workspace-rbac
+  ├── clusterops-workspace-networkpolicies
+  ├── clusterops-workspace-resourcequotas
+  ├── clusterops-workspace-applications
+  ├── clusterops-clusters
+  ├── clusterops-sealed-secrets
+  └── clusterops-project-definitions
+
+Level 2 (Depends on project-definitions):
+  └── clusterops-project-applications
+```
+
+## Adding a New Workspace
+
+1. Create workspace directory under `resources/workspaces/<workspace-name>/`
+2. Add workspace YAML: `<workspace-name>.yaml`
+3. Add subdirectories as needed: `clusters/`, `projects/`, `rbac/`, etc.
+4. Update `resources/workspaces/kustomization.yaml` to include the new workspace
+
+## Adding a New Cluster
+
+1. Add cluster YAML under `resources/workspaces/<workspace>/clusters/bases/`
+2. Add sealed secrets for credentials
+3. Optionally add overlays for version-specific patches
