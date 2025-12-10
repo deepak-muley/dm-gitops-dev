@@ -31,4 +31,3 @@ spec:
             values:
               - dm-nkp-workload-2
       configMapName: ""
-
