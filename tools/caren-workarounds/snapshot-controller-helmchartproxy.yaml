@@ -1,0 +1,85 @@
+# Snapshot Controller HelmChartProxy for workload clusters
+# This ensures VolumeSnapshot CRDs are available (required by CSI)
+#
+# MUST be deployed BEFORE nutanix-csi-helmchartproxy.yaml
+---
+apiVersion: addons.cluster.x-k8s.io/v1alpha1
+kind: HelmChartProxy
+metadata:
+  name: snapshot-controller-dm-nkp-workload-1
+  namespace: dm-dev-workspace
+spec:
+  chartName: snapshot-controller
+  clusterSelector:
+    matchLabels:
+      cluster.x-k8s.io/cluster-name: dm-nkp-workload-1
+  namespace: kube-system
+  options:
+    enableClientCache: false
+    install:
+      createNamespace: true
+    timeout: 10m0s
+    upgrade:
+      maxHistory: 10
+  releaseName: snapshot-controller
+  repoURL: oci://helm-repository.caren-system.svc/charts
+  tlsConfig:
+    caSecret:
+      name: helm-repository-tls
+      namespace: caren-system
+  valuesTemplate: |-
+    controller:
+      priorityClassName: system-cluster-critical
+      tolerations:
+        - key: CriticalAddonsOnly
+          operator: Exists
+        - effect: NoExecute
+          operator: Exists
+          tolerationSeconds: 300
+        - effect: NoSchedule
+          key: node-role.kubernetes.io/control-plane
+          operator: Exists
+    webhook:
+      enabled: false
+  version: 4.1.0
+---
+apiVersion: addons.cluster.x-k8s.io/v1alpha1
+kind: HelmChartProxy
+metadata:
+  name: snapshot-controller-dm-nkp-workload-2
+  namespace: dm-dev-workspace
+spec:
+  chartName: snapshot-controller
+  clusterSelector:
+    matchLabels:
+      cluster.x-k8s.io/cluster-name: dm-nkp-workload-2
+  namespace: kube-system
+  options:
+    enableClientCache: false
+    install:
+      createNamespace: true
+    timeout: 10m0s
+    upgrade:
+      maxHistory: 10
+  releaseName: snapshot-controller
+  repoURL: oci://helm-repository.caren-system.svc/charts
+  tlsConfig:
+    caSecret:
+      name: helm-repository-tls
+      namespace: caren-system
+  valuesTemplate: |-
+    controller:
+      priorityClassName: system-cluster-critical
+      tolerations:
+        - key: CriticalAddonsOnly
+          operator: Exists
+        - effect: NoExecute
+          operator: Exists
+          tolerationSeconds: 300
+        - effect: NoSchedule
+          key: node-role.kubernetes.io/control-plane
+          operator: Exists
+    webhook:
+      enabled: false
+  version: 4.1.0
+

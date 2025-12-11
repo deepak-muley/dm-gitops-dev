@@ -1,0 +1,99 @@
+# Nutanix CSI Storage HelmChartProxy for workload clusters
+# This ensures CSI is deployed even if CAREN webhook times out
+#
+# PREREQUISITES:
+# 1. Snapshot Controller must be deployed first (see snapshot-controller-helmchartproxy.yaml)
+# 2. CSI credentials secret must exist on workload cluster
+#
+# To create CSI credentials on workload cluster:
+#   CSI_KEY=$(kubectl get secret nutanix-csi-credentials -n ntnx-system -o jsonpath='{.data.key}')
+#   kubectl create namespace ntnx-system --kubeconfig=<workload-kubeconfig>
+#   cat << EOF | kubectl apply --kubeconfig=<workload-kubeconfig> -f -
+#   apiVersion: v1
+#   kind: Secret
+#   metadata:
+#     name: nutanix-csi-credentials
+#     namespace: ntnx-system
+#   type: Opaque
+#   data:
+#     key: $CSI_KEY
+#   EOF
+#
+# The CSI credential format is: <prism-central-host>:<port>:<username>:<password>
+---
+apiVersion: addons.cluster.x-k8s.io/v1alpha1
+kind: HelmChartProxy
+metadata:
+  name: nutanix-csi-dm-nkp-workload-1
+  namespace: dm-dev-workspace
+spec:
+  chartName: nutanix-csi-storage
+  clusterSelector:
+    matchLabels:
+      cluster.x-k8s.io/cluster-name: dm-nkp-workload-1
+  namespace: ntnx-system
+  options:
+    enableClientCache: false
+    install:
+      createNamespace: true
+    timeout: 10m0s
+    upgrade:
+      maxHistory: 10
+  releaseName: nutanix-csi
+  repoURL: oci://helm-repository.caren-system.svc/charts
+  tlsConfig:
+    caSecret:
+      name: helm-repository-tls
+      namespace: caren-system
+  valuesTemplate: |-
+    createPrismCentralSecret: false
+    createSecret: false
+    pcSecretName: nutanix-csi-credentials
+    tolerations:
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - effect: NoExecute
+        operator: Exists
+        tolerationSeconds: 300
+      - effect: NoSchedule
+        operator: Exists
+  version: 3.3.8
+---
+apiVersion: addons.cluster.x-k8s.io/v1alpha1
+kind: HelmChartProxy
+metadata:
+  name: nutanix-csi-dm-nkp-workload-2
+  namespace: dm-dev-workspace
+spec:
+  chartName: nutanix-csi-storage
+  clusterSelector:
+    matchLabels:
+      cluster.x-k8s.io/cluster-name: dm-nkp-workload-2
+  namespace: ntnx-system
+  options:
+    enableClientCache: false
+    install:
+      createNamespace: true
+    timeout: 10m0s
+    upgrade:
+      maxHistory: 10
+  releaseName: nutanix-csi
+  repoURL: oci://helm-repository.caren-system.svc/charts
+  tlsConfig:
+    caSecret:
+      name: helm-repository-tls
+      namespace: caren-system
+  valuesTemplate: |-
+    createPrismCentralSecret: false
+    createSecret: false
+    pcSecretName: nutanix-csi-credentials
+    tolerations:
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - effect: NoExecute
+        operator: Exists
+        tolerationSeconds: 300
+      - effect: NoSchedule
+        operator: Exists
+  version: 3.3.8
+
