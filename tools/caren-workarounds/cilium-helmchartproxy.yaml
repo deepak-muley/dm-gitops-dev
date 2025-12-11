@@ -1,0 +1,139 @@
+# Cilium CNI HelmChartProxy for workload clusters
+# This ensures Cilium is deployed even if CAREN webhook times out
+---
+apiVersion: addons.cluster.x-k8s.io/v1alpha1
+kind: HelmChartProxy
+metadata:
+  name: cilium-dm-nkp-workload-1
+  namespace: dm-dev-workspace
+spec:
+  chartName: cilium
+  clusterSelector:
+    matchLabels:
+      cluster.x-k8s.io/cluster-name: dm-nkp-workload-1
+  namespace: kube-system
+  options:
+    enableClientCache: false
+    install:
+      createNamespace: true
+    timeout: 10m0s
+    upgrade:
+      maxHistory: 10
+  releaseName: cilium
+  repoURL: oci://helm-repository.caren-system.svc/charts
+  tlsConfig:
+    caSecret:
+      name: helm-repository-tls
+      namespace: caren-system
+  valuesTemplate: |-
+    cni:
+      exclusive: false
+    hubble:
+      enabled: true
+      tls:
+        auto:
+          enabled: true
+          method: cronJob
+          certValidityDuration: 60
+          schedule: "0 0 1 * *"
+      relay:
+        enabled: true
+        tls:
+          server:
+            enabled: true
+            mtls: true
+        image:
+          useDigest: false
+        priorityClassName: system-cluster-critical
+    ipam:
+      mode: kubernetes
+    image:
+      useDigest: false
+    operator:
+      image:
+        useDigest: false
+    certgen:
+      image:
+        useDigest: false
+    socketLB:
+      hostNamespaceOnly: true
+    envoy:
+      image:
+        useDigest: false
+    k8sServiceHost: "10.23.130.62"
+    k8sServicePort: "6443"
+    kubeProxyReplacement: true
+    tunnelProtocol: geneve
+    loadBalancer:
+      mode: dsr
+      dsrDispatch: geneve
+  version: 1.18.2
+---
+apiVersion: addons.cluster.x-k8s.io/v1alpha1
+kind: HelmChartProxy
+metadata:
+  name: cilium-dm-nkp-workload-2
+  namespace: dm-dev-workspace
+spec:
+  chartName: cilium
+  clusterSelector:
+    matchLabels:
+      cluster.x-k8s.io/cluster-name: dm-nkp-workload-2
+  namespace: kube-system
+  options:
+    enableClientCache: false
+    install:
+      createNamespace: true
+    timeout: 10m0s
+    upgrade:
+      maxHistory: 10
+  releaseName: cilium
+  repoURL: oci://helm-repository.caren-system.svc/charts
+  tlsConfig:
+    caSecret:
+      name: helm-repository-tls
+      namespace: caren-system
+  valuesTemplate: |-
+    cni:
+      exclusive: false
+    hubble:
+      enabled: true
+      tls:
+        auto:
+          enabled: true
+          method: cronJob
+          certValidityDuration: 60
+          schedule: "0 0 1 * *"
+      relay:
+        enabled: true
+        tls:
+          server:
+            enabled: true
+            mtls: true
+        image:
+          useDigest: false
+        priorityClassName: system-cluster-critical
+    ipam:
+      mode: kubernetes
+    image:
+      useDigest: false
+    operator:
+      image:
+        useDigest: false
+    certgen:
+      image:
+        useDigest: false
+    socketLB:
+      hostNamespaceOnly: true
+    envoy:
+      image:
+        useDigest: false
+    k8sServiceHost: "10.23.130.63"
+    k8sServicePort: "6443"
+    kubeProxyReplacement: true
+    tunnelProtocol: geneve
+    loadBalancer:
+      mode: dsr
+      dsrDispatch: geneve
+  version: 1.18.2
+

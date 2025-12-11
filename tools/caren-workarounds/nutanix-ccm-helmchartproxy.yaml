@@ -1,0 +1,78 @@
+# Nutanix Cloud Controller Manager HelmChartProxy for workload clusters
+# This ensures CCM is deployed even if CAREN webhook times out
+#
+# NOTE: CCM requires a credentials secret (nutanix-ccm-credentials) to exist
+# in the workload cluster's kube-system namespace. This secret should contain
+# the Prism Central credentials in the format expected by the CCM.
+#
+# The credentials secret can be created from the existing PC credentials:
+#   kubectl get secret <cluster>-pc-credentials -n dm-dev-workspace -o jsonpath='{.data.credentials}' | \
+#     base64 -d | kubectl create secret generic nutanix-ccm-credentials \
+#     --from-file=credentials=/dev/stdin -n kube-system --kubeconfig=<workload-kubeconfig>
+---
+apiVersion: addons.cluster.x-k8s.io/v1alpha1
+kind: HelmChartProxy
+metadata:
+  name: nutanix-ccm-dm-nkp-workload-1
+  namespace: dm-dev-workspace
+spec:
+  chartName: nutanix-cloud-provider
+  clusterSelector:
+    matchLabels:
+      cluster.x-k8s.io/cluster-name: dm-nkp-workload-1
+  namespace: kube-system
+  options:
+    enableClientCache: false
+    install:
+      createNamespace: true
+    timeout: 10m0s
+    upgrade:
+      maxHistory: 10
+  releaseName: nutanix-ccm
+  repoURL: oci://helm-repository.caren-system.svc/charts
+  tlsConfig:
+    caSecret:
+      name: helm-repository-tls
+      namespace: caren-system
+  valuesTemplate: |-
+    prismCentralEndPoint: pc.dev.nkp.sh
+    prismCentralPort: 9440
+    prismCentralInsecure: false
+    ignoredNodeIPs: [ "10.23.130.62" ]
+    createSecret: false
+    secretName: nutanix-ccm-credentials
+  version: 0.6.0
+---
+apiVersion: addons.cluster.x-k8s.io/v1alpha1
+kind: HelmChartProxy
+metadata:
+  name: nutanix-ccm-dm-nkp-workload-2
+  namespace: dm-dev-workspace
+spec:
+  chartName: nutanix-cloud-provider
+  clusterSelector:
+    matchLabels:
+      cluster.x-k8s.io/cluster-name: dm-nkp-workload-2
+  namespace: kube-system
+  options:
+    enableClientCache: false
+    install:
+      createNamespace: true
+    timeout: 10m0s
+    upgrade:
+      maxHistory: 10
+  releaseName: nutanix-ccm
+  repoURL: oci://helm-repository.caren-system.svc/charts
+  tlsConfig:
+    caSecret:
+      name: helm-repository-tls
+      namespace: caren-system
+  valuesTemplate: |-
+    prismCentralEndPoint: pc.dev.nkp.sh
+    prismCentralPort: 9440
+    prismCentralInsecure: false
+    ignoredNodeIPs: [ "10.23.130.63" ]
+    createSecret: false
+    secretName: nutanix-ccm-credentials
+  version: 0.6.0
+
