@@ -7,5 +7,5 @@ metadata:
 spec:
   type: oci
   interval: 1h0m0s
-  url: oci://docker.io/twuni
+  url: oci://registry-1.docker.io/twuni
 
