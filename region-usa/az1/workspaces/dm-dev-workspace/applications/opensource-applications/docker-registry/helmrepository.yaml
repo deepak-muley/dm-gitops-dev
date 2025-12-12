@@ -1,9 +1,0 @@
----
-apiVersion: source.toolkit.fluxcd.io/v1
-kind: OCIRepository
-metadata:
-  name: docker-registry
-  namespace: docker-registry
-spec:
-  interval: 1h0m0s
-  url: oci://index.docker.io/library/registry
