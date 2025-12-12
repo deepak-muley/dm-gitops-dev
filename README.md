@@ -10,22 +10,22 @@ Each region and availability zone has its own bootstrap file. Apply the one matc
 
 ```bash
 # USA Region - AZ1 (Currently Active)
-kubectl apply -f https://raw.githubusercontent.com/deepak-muley/dm-gitops-dev/main/region-usa/az1/bootstrap.yaml
+kubectl apply -f https://raw.githubusercontent.com/deepak-muley/dm-nkp-gitops-infra/main/region-usa/az1/bootstrap.yaml
 
 # USA Region - AZ2
-kubectl apply -f https://raw.githubusercontent.com/deepak-muley/dm-gitops-dev/main/region-usa/az2/bootstrap.yaml
+kubectl apply -f https://raw.githubusercontent.com/deepak-muley/dm-nkp-gitops-infra/main/region-usa/az2/bootstrap.yaml
 
 # USA Region - AZ3
-kubectl apply -f https://raw.githubusercontent.com/deepak-muley/dm-gitops-dev/main/region-usa/az3/bootstrap.yaml
+kubectl apply -f https://raw.githubusercontent.com/deepak-muley/dm-nkp-gitops-infra/main/region-usa/az3/bootstrap.yaml
 
 # India Region - AZ1
-kubectl apply -f https://raw.githubusercontent.com/deepak-muley/dm-gitops-dev/main/region-india/az1/bootstrap.yaml
+kubectl apply -f https://raw.githubusercontent.com/deepak-muley/dm-nkp-gitops-infra/main/region-india/az1/bootstrap.yaml
 
 # India Region - AZ2
-kubectl apply -f https://raw.githubusercontent.com/deepak-muley/dm-gitops-dev/main/region-india/az2/bootstrap.yaml
+kubectl apply -f https://raw.githubusercontent.com/deepak-muley/dm-nkp-gitops-infra/main/region-india/az2/bootstrap.yaml
 
 # India Region - AZ3
-kubectl apply -f https://raw.githubusercontent.com/deepak-muley/dm-gitops-dev/main/region-india/az3/bootstrap.yaml
+kubectl apply -f https://raw.githubusercontent.com/deepak-muley/dm-nkp-gitops-infra/main/region-india/az3/bootstrap.yaml
 ```
 
 ## Regions & Availability Zones

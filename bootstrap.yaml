@@ -20,10 +20,10 @@
 # Usage Examples:
 #
 #   # Bootstrap USA AZ1 (currently active):
-#   kubectl apply -f https://raw.githubusercontent.com/deepak-muley/dm-gitops-dev/main/region-usa/az1/bootstrap.yaml
+#   kubectl apply -f https://raw.githubusercontent.com/deepak-muley/dm-nkp-gitops-infra/main/region-usa/az1/bootstrap.yaml
 #
 #   # Bootstrap India AZ1 (when ready):
-#   kubectl apply -f https://raw.githubusercontent.com/deepak-muley/dm-gitops-dev/main/region-india/az1/bootstrap.yaml
+#   kubectl apply -f https://raw.githubusercontent.com/deepak-muley/dm-nkp-gitops-infra/main/region-india/az1/bootstrap.yaml
 #
 # Each bootstrap file creates:
 #   1. GitRepository - Points to this repo
@@ -44,7 +44,7 @@ spec:
   ref:
     branch: main
   timeout: 60s
-  url: https://github.com/deepak-muley/dm-gitops-dev.git
+  url: https://github.com/deepak-muley/dm-nkp-gitops-infra.git
 ---
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization

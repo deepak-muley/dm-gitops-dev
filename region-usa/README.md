@@ -14,13 +14,13 @@ GitOps configuration for USA region availability zones.
 
 ```bash
 # Bootstrap AZ1
-kubectl apply -f https://raw.githubusercontent.com/deepak-muley/dm-gitops-dev/main/region-usa/az1/bootstrap.yaml
+kubectl apply -f https://raw.githubusercontent.com/deepak-muley/dm-nkp-gitops-infra/main/region-usa/az1/bootstrap.yaml
 
 # Bootstrap AZ2 (when ready)
-kubectl apply -f https://raw.githubusercontent.com/deepak-muley/dm-gitops-dev/main/region-usa/az2/bootstrap.yaml
+kubectl apply -f https://raw.githubusercontent.com/deepak-muley/dm-nkp-gitops-infra/main/region-usa/az2/bootstrap.yaml
 
 # Bootstrap AZ3 (when ready)
-kubectl apply -f https://raw.githubusercontent.com/deepak-muley/dm-gitops-dev/main/region-usa/az3/bootstrap.yaml
+kubectl apply -f https://raw.githubusercontent.com/deepak-muley/dm-nkp-gitops-infra/main/region-usa/az3/bootstrap.yaml
 ```
 
 ## AZ1 Resources

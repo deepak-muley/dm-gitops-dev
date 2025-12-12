@@ -1,7 +1,7 @@
 # Bootstrap manifest for NKP GitOps - India Region AZ2
 # Apply this to bootstrap GitOps for region-india/az2:
 #
-#   kubectl apply -f https://raw.githubusercontent.com/deepak-muley/dm-gitops-dev/main/region-india/az2/bootstrap.yaml
+#   kubectl apply -f https://raw.githubusercontent.com/deepak-muley/dm-nkp-gitops-infra/main/region-india/az2/bootstrap.yaml
 #
 # Or locally:
 #   kubectl apply -f region-india/az2/bootstrap.yaml
@@ -22,7 +22,7 @@ spec:
   ref:
     branch: main
   timeout: 60s
-  url: https://github.com/deepak-muley/dm-gitops-dev.git
+  url: https://github.com/deepak-muley/dm-nkp-gitops-infra.git
 ---
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
