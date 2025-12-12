@@ -1,0 +1,56 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: docker-registry
+  namespace: docker-registry
+spec:
+  chart:
+    spec:
+      chart: docker-registry
+      reconcileStrategy: ChartVersion
+      sourceRef:
+        kind: HelmRepository
+        name: docker-registry
+      version: ">=1.0.0"
+  install:
+    crds: Create
+    remediation:
+      retries: 3
+  interval: 1h0m0s
+  releaseName: docker-registry
+  targetNamespace: docker-registry
+  upgrade:
+    crds: CreateReplace
+    remediation:
+      retries: 3
+  values:
+    # Use the official registry:3 image from Docker Hub
+    image:
+      registry: docker.io
+      repository: library/registry
+      tag: "3"
+    # Service configuration
+    service:
+      type: ClusterIP
+      port: 5000
+    # Persistence for storing images
+    persistence:
+      enabled: true
+      size: 10Gi
+      storageClass: ""
+    # Resource requests/limits
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+    # Security context
+    containerSecurityContext:
+      enabled: true
+      runAsNonRoot: true
+      allowPrivilegeEscalation: false
+    # Replica count
+    replicaCount: 1

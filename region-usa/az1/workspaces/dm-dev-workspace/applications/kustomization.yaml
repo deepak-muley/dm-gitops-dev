@@ -3,3 +3,4 @@ kind: Kustomization
 resources:
   - nkp-nutanix-products-catalog-applications
   - platform-applications
+  - opensource-applications

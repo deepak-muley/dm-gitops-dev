@@ -1,0 +1,49 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: podinfo
+  namespace: podinfo
+spec:
+  chart:
+    spec:
+      chart: podinfo
+      reconcileStrategy: ChartVersion
+      sourceRef:
+        kind: HelmRepository
+        name: podinfo
+      version: ">=6.0.0"
+  install:
+    crds: Create
+    remediation:
+      retries: 3
+  interval: 1h0m0s
+  releaseName: podinfo
+  targetNamespace: podinfo
+  upgrade:
+    crds: CreateReplace
+    remediation:
+      retries: 3
+  values:
+    # Enable service with ClusterIP
+    service:
+      enabled: true
+      type: ClusterIP
+      port: 9898
+    # Enable basic ingress (optional - disabled by default)
+    ingress:
+      enabled: false
+    # Resource requests/limits
+    resources:
+      requests:
+        cpu: 100m
+        memory: 64Mi
+      limits:
+        cpu: 200m
+        memory: 128Mi
+    # Replicas
+    replicaCount: 1
+    # UI customization
+    ui:
+      color: "#34577c"
+      message: "Welcome to Podinfo - deployed via GitOps!"
