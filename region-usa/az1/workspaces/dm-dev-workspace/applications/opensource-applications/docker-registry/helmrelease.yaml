@@ -12,7 +12,7 @@ spec:
       sourceRef:
         kind: HelmRepository
         name: docker-registry
-      version: ">=1.0.0"
+      version: ">=2.0.0"
   install:
     crds: Create
     remediation:
@@ -25,11 +25,10 @@ spec:
     remediation:
       retries: 3
   values:
-    # Use the official registry:3 image from Docker Hub
+    # Use the official registry image from Docker Hub
     image:
-      registry: docker.io
-      repository: library/registry
-      tag: "3"
+      repository: registry
+      tag: "2.8.3"
     # Service configuration
     service:
       type: ClusterIP
@@ -38,7 +37,6 @@ spec:
     persistence:
       enabled: true
       size: 10Gi
-      storageClass: ""
     # Resource requests/limits
     resources:
       requests:
@@ -47,10 +45,5 @@ spec:
       limits:
         cpu: 500m
         memory: 512Mi
-    # Security context
-    containerSecurityContext:
-      enabled: true
-      runAsNonRoot: true
-      allowPrivilegeEscalation: false
     # Replica count
     replicaCount: 1

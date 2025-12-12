@@ -5,7 +5,6 @@ metadata:
   name: docker-registry
   namespace: docker-registry
 spec:
-  type: oci
   interval: 1h0m0s
-  url: oci://registry-1.docker.io/bitnamicharts
+  url: https://helm.twun.io
 
