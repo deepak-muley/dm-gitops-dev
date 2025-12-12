@@ -10,7 +10,7 @@ spec:
       chart: docker-registry
       reconcileStrategy: ChartVersion
       sourceRef:
-        kind: HelmRepository
+        kind: OCIRepository
         name: docker-registry
       version: ">=2.0.0"
   install:
