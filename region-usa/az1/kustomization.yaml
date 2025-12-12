@@ -20,7 +20,6 @@ resources:
   - workspaces/dm-dev-workspace/clusters/flux-ks.yaml
   - workspaces/dm-dev-workspace/clusters/sealed-secrets/flux-ks.yaml
   - workspaces/dm-dev-workspace/rbac/flux-ks.yaml
-  - workspaces/dm-dev-workspace/networkpolicies/flux-ks.yaml
   - workspaces/dm-dev-workspace/resourcequotas/flux-ks.yaml
   - workspaces/dm-dev-workspace/projects/flux-ks.yaml
   - workspaces/dm-dev-workspace/projects/dm-dev-project/applications/flux-ks.yaml
