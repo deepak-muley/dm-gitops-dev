@@ -2,6 +2,8 @@ apiVersion: source.toolkit.fluxcd.io/v1
 kind: OCIRepository
 metadata:
   creationTimestamp: null
+  annotations:
+    nkp.nutanix.com/skip-oci-registry-patches: "true"
   labels:
     catalog.nkp.nutanix.com/catalog-source-artifact: "true"
   name: dm-nkp-gitops-app-catalog-collection
