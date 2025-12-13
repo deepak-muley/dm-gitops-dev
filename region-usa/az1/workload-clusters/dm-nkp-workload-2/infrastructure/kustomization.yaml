@@ -5,6 +5,9 @@ kind: Kustomization
 # These are deployed INSIDE the workload cluster
 
 resources:
+  # Base infrastructure (includes sealed-secrets-controller)
+  - ../../_base/infrastructure/
+  # Cluster-specific sealed secrets (NDK image pull secret, etc.)
   - sealed-secrets/
 # Add infrastructure components as needed, e.g.:
 #   - cert-manager/

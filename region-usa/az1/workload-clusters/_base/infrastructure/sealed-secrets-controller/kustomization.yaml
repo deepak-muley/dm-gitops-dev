@@ -1,0 +1,11 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Sealed Secrets Controller for workload clusters
+# Installs the sealed-secrets controller via Helm
+
+resources:
+  - namespace.yaml
+  - helmrepository.yaml
+  - helmrelease.yaml
+
