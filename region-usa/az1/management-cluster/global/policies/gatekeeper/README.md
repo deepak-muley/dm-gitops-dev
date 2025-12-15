@@ -146,6 +146,26 @@ parameters:
   maxMemory: "64Gi"   # 64 GB
 ```
 
+### Airgapped / Disconnected Environments
+
+For airgapped environments where all images are mirrored to an internal registry:
+
+1. **Edit** `constraints/image-security/allowed-repos.yaml`
+2. **Remove** all public registries (docker.io, gcr.io, quay.io, etc.)
+3. **Add** only your internal registry:
+
+```yaml
+parameters:
+  repos:
+    # AIRGAPPED: Only internal registry
+    - "harbor.internal.company.com/"
+    # Or with project structure:
+    # - "registry.company.com/nkp/"
+    # - "registry.company.com/platform/"
+```
+
+**Important**: Ensure ALL NKP images are mirrored to your internal registry before enabling enforcement.
+
 ## Monitoring
 
 ### Check Constraint Status

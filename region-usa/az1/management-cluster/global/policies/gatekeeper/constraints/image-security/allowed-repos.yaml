@@ -16,16 +16,19 @@ spec:
   parameters:
     repos:
       # =========================================
-      # CUSTOMIZE THIS LIST FOR YOUR ORGANIZATION
+      # INTERNET-CONNECTED ENVIRONMENTS
       # =========================================
-      # Common public registries (review and restrict as needed)
-      - "docker.io/library/" # Official Docker images
-      - "docker.io/" # Docker Hub
-      - "gcr.io/" # Google Container Registry
-      - "ghcr.io/" # GitHub Container Registry
-      - "quay.io/" # Red Hat Quay
-      - "registry.k8s.io/" # Kubernetes official images
-      - "k8s.gcr.io/" # Legacy Kubernetes images
+      # Use the registries below for environments with internet access.
+      # Review and restrict as needed for your organization.
+      
+      # Common public registries
+      - "docker.io/library/"         # Official Docker images
+      - "docker.io/"                 # Docker Hub
+      - "gcr.io/"                    # Google Container Registry
+      - "ghcr.io/"                   # GitHub Container Registry
+      - "quay.io/"                   # Red Hat Quay
+      - "registry.k8s.io/"           # Kubernetes official images
+      - "k8s.gcr.io/"                # Legacy Kubernetes images
 
       # Nutanix registries
       - "registry.nutanix.com/"
@@ -41,6 +44,27 @@ spec:
       
       # Cloud Provider Registries
       - "mcr.microsoft.com/"         # Microsoft Container Registry (Azure)
+
+      # =========================================
+      # AIRGAPPED / DISCONNECTED ENVIRONMENTS
+      # =========================================
+      # For airgapped environments, REMOVE all public registries above
+      # and add ONLY your internal registry where images are mirrored.
+      #
+      # Example configurations:
+      #
+      # Option 1: Single internal registry
+      # - "harbor.internal.company.com/"
+      #
+      # Option 2: Registry with project/path structure
+      # - "registry.company.com/nkp/"
+      # - "registry.company.com/platform/"
+      # - "registry.company.com/apps/"
+      #
+      # Option 3: Multiple internal registries
+      # - "harbor.prod.company.com/"
+      # - "harbor.dev.company.com/"
+      # =========================================
 
       # Add your organization's private registries below
       # - "your-registry.example.com/"
