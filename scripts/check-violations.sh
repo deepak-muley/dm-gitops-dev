@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # NKP Gatekeeper Violations Checker
-# 
+#
 # Usage:
 #   ./check-violations.sh                    # Uses default kubeconfig
 #   ./check-violations.sh /path/to/kubeconfig # Uses specified kubeconfig
@@ -133,7 +133,7 @@ echo "Constraint                              | Violations | Severity"
 echo "----------------------------------------|------------|----------"
 
 kubectl get constraints -o json 2>/dev/null | jq -r '
-.items[] | 
+.items[] |
 select(.status.totalViolations != null) |
 [
   .metadata.name,
@@ -158,9 +158,9 @@ echo -e "${YELLOW}TOTAL VIOLATIONS: $TOTAL${NC}"
 print_header "VIOLATIONS BY NAMESPACE"
 
 kubectl get constraints -o json 2>/dev/null | jq -r '
-[.items[] | .status.violations[]? | .namespace // "cluster-scoped"] | 
-group_by(.) | 
-map({namespace: .[0], count: length}) | 
+[.items[] | .status.violations[]? | .namespace // "cluster-scoped"] |
+group_by(.) |
+map({namespace: .[0], count: length}) |
 sort_by(.count) | reverse | .[:15][] |
 "\(.count)\t\(.namespace)"
 ' | while IFS=$'\t' read -r count ns; do
@@ -187,21 +187,21 @@ done
 #######################################
 if [[ "$SUMMARY_ONLY" != true ]]; then
     print_header "DETAILED VIOLATIONS"
-    
+
     # Get constraints with violations
     kubectl get constraints -o json 2>/dev/null | jq -r '
-    .items[] | 
-    select(.status.totalViolations > 0) | 
+    .items[] |
+    select(.status.totalViolations > 0) |
     .metadata.name
     ' | while read -r constraint; do
         echo ""
         echo -e "${YELLOW}▶ $constraint${NC}"
-        
+
         kubectl get constraints "$constraint" -o json 2>/dev/null | jq -r '
         .status.violations[:10][] |
         "  - \(.namespace // "cluster")/\(.kind)/\(.name)\n    → \(.message)"
         '
-        
+
         # Show if more violations exist
         TOTAL_FOR_CONSTRAINT=$(kubectl get constraints "$constraint" -o json 2>/dev/null | jq '.status.totalViolations')
         if [[ $TOTAL_FOR_CONSTRAINT -gt 10 ]]; then
@@ -216,7 +216,7 @@ fi
 if [[ "$EXPORT_JSON" == true ]]; then
     EXPORT_FILE="violations-report-$(date +%Y%m%d-%H%M%S).json"
     print_header "EXPORTING TO $EXPORT_FILE"
-    
+
     kubectl get constraints -o json 2>/dev/null | jq '{
         generated: (now | strftime("%Y-%m-%d %H:%M:%S")),
         cluster: "'"$CLUSTER_NAME"'",
@@ -230,7 +230,7 @@ if [[ "$EXPORT_JSON" == true ]]; then
         }] | sort_by(.violations) | reverse,
         by_namespace: ([.items[] | .status.violations[]? | .namespace // "cluster-scoped"] | group_by(.) | map({namespace: .[0], count: length}) | sort_by(.count) | reverse)
     }' > "$EXPORT_FILE"
-    
+
     echo -e "${GREEN}Exported to: $EXPORT_FILE${NC}"
 fi
 
