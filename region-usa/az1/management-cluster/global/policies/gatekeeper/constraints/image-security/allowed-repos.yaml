@@ -25,7 +25,6 @@ spec:
       - capz-system
       - capg-system
       - capv-system
-      - cappp-system
       - caaph-system
   parameters:
     repos:
@@ -34,15 +33,15 @@ spec:
       # =========================================
       # Use the registries below for environments with internet access.
       # Review and restrict as needed for your organization.
-      
+
       # Common public registries
-      - "docker.io/library/"         # Official Docker images
-      - "docker.io/"                 # Docker Hub
-      - "gcr.io/"                    # Google Container Registry
-      - "ghcr.io/"                   # GitHub Container Registry
-      - "quay.io/"                   # Red Hat Quay
-      - "registry.k8s.io/"           # Kubernetes official images
-      - "k8s.gcr.io/"                # Legacy Kubernetes images
+      - "docker.io/library/" # Official Docker images
+      - "docker.io/" # Docker Hub
+      - "gcr.io/" # Google Container Registry
+      - "ghcr.io/" # GitHub Container Registry
+      - "quay.io/" # Red Hat Quay
+      - "registry.k8s.io/" # Kubernetes official images
+      - "k8s.gcr.io/" # Legacy Kubernetes images
 
       # Nutanix registries
       - "registry.nutanix.com/"
@@ -53,11 +52,12 @@ spec:
       - "docker.io/mesosphere/"
 
       # NKP Platform Components
-      - "velero/"                    # Velero backup tool (kommander)
-      - "openpolicyagent/"           # OPA Gatekeeper (kommander)
-      
+      - "velero/" # Velero backup tool (kommander)
+      - "openpolicyagent/" # OPA Gatekeeper (kommander)
+
       # Cloud Provider Registries
-      - "mcr.microsoft.com/"         # Microsoft Container Registry (Azure)
+      - "mcr.microsoft.com/" # Microsoft Container Registry (Azure)
+
 
       # =========================================
       # AIRGAPPED / DISCONNECTED ENVIRONMENTS

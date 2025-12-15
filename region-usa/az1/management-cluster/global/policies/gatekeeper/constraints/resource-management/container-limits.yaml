@@ -25,7 +25,6 @@ spec:
       - capz-system
       - capg-system
       - capv-system
-      - cappp-system
       - caaph-system
   parameters:
     # Customize these limits based on your cluster capacity
