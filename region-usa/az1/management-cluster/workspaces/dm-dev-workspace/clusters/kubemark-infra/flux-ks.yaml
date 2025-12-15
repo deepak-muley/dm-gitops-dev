@@ -1,0 +1,33 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: clusterops-kubemark-clusters
+  namespace: dm-nkp-gitops-infra
+spec:
+  dependsOn:
+    - name: clusterops-workspaces
+    # Ensure CAPK provider is installed before creating clusters
+    - name: clusterops-capk-provider
+  interval: 5s
+  path: ./region-usa/az1/management-cluster/workspaces/dm-dev-workspace/clusters/kubemark-infra/bases
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: gitops-usa-az1
+    namespace: kommander
+---
+# CAPK Provider Flux Kustomization
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: clusterops-capk-provider
+  namespace: dm-nkp-gitops-infra
+spec:
+  interval: 5s
+  path: ./region-usa/az1/management-cluster/workspaces/dm-dev-workspace/clusters/kubemark-infra/capk-provider
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: gitops-usa-az1
+    namespace: kommander
+

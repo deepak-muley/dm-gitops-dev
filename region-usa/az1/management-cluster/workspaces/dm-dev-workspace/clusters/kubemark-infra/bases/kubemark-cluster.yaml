@@ -1,0 +1,133 @@
+---
+# Kubemark Cluster for performance testing and simulation
+# This creates a cluster with hollow (simulated) nodes for testing at scale
+apiVersion: cluster.x-k8s.io/v1beta1
+kind: Cluster
+metadata:
+  name: dm-kubemark-cluster-1
+  namespace: dm-dev-workspace
+  labels:
+    cluster.x-k8s.io/provider: kubemark
+spec:
+  clusterNetwork:
+    pods:
+      cidrBlocks:
+        - 192.168.0.0/16
+    services:
+      cidrBlocks:
+        - 10.96.0.0/12
+  controlPlaneRef:
+    apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+    kind: KubeadmControlPlane
+    name: dm-kubemark-cluster-1-control-plane
+  infrastructureRef:
+    apiVersion: infrastructure.cluster.x-k8s.io/v1alpha1
+    kind: KubemarkCluster
+    name: dm-kubemark-cluster-1
+---
+# KubemarkCluster infrastructure spec
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha1
+kind: KubemarkCluster
+metadata:
+  name: dm-kubemark-cluster-1
+  namespace: dm-dev-workspace
+spec: {}
+---
+# Control Plane configuration
+apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+kind: KubeadmControlPlane
+metadata:
+  name: dm-kubemark-cluster-1-control-plane
+  namespace: dm-dev-workspace
+spec:
+  replicas: 1
+  version: v1.30.0
+  machineTemplate:
+    infrastructureRef:
+      apiVersion: infrastructure.cluster.x-k8s.io/v1alpha1
+      kind: KubemarkMachineTemplate
+      name: dm-kubemark-cluster-1-control-plane
+  kubeadmConfigSpec:
+    initConfiguration:
+      nodeRegistration:
+        kubeletExtraArgs:
+          # Kubemark specific settings
+          provider-id: "kubemark://{{ ds.meta_data.local_hostname }}"
+    joinConfiguration:
+      nodeRegistration:
+        kubeletExtraArgs:
+          provider-id: "kubemark://{{ ds.meta_data.local_hostname }}"
+    clusterConfiguration:
+      apiServer:
+        extraArgs:
+          cloud-provider: external
+      controllerManager:
+        extraArgs:
+          cloud-provider: external
+---
+# Control Plane Machine Template
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha1
+kind: KubemarkMachineTemplate
+metadata:
+  name: dm-kubemark-cluster-1-control-plane
+  namespace: dm-dev-workspace
+spec:
+  template:
+    spec:
+      # ExtraMounts can be used to mount additional volumes into the kubemark pod
+      extraMounts: []
+---
+# Worker MachineDeployment for hollow nodes
+apiVersion: cluster.x-k8s.io/v1beta1
+kind: MachineDeployment
+metadata:
+  name: dm-kubemark-cluster-1-md-0
+  namespace: dm-dev-workspace
+  annotations:
+    cluster.x-k8s.io/cluster-api-autoscaler-node-group-max-size: "100"
+    cluster.x-k8s.io/cluster-api-autoscaler-node-group-min-size: "10"
+spec:
+  clusterName: dm-kubemark-cluster-1
+  replicas: 10
+  selector:
+    matchLabels: {}
+  template:
+    spec:
+      clusterName: dm-kubemark-cluster-1
+      version: v1.30.0
+      bootstrap:
+        configRef:
+          apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
+          kind: KubeadmConfigTemplate
+          name: dm-kubemark-cluster-1-md-0
+      infrastructureRef:
+        apiVersion: infrastructure.cluster.x-k8s.io/v1alpha1
+        kind: KubemarkMachineTemplate
+        name: dm-kubemark-cluster-1-md-0
+---
+# Worker Machine Template
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha1
+kind: KubemarkMachineTemplate
+metadata:
+  name: dm-kubemark-cluster-1-md-0
+  namespace: dm-dev-workspace
+spec:
+  template:
+    spec:
+      # Hollow nodes simulate worker node behavior without actual compute
+      extraMounts: []
+---
+# Bootstrap config for workers
+apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
+kind: KubeadmConfigTemplate
+metadata:
+  name: dm-kubemark-cluster-1-md-0
+  namespace: dm-dev-workspace
+spec:
+  template:
+    spec:
+      joinConfiguration:
+        nodeRegistration:
+          kubeletExtraArgs:
+            provider-id: "kubemark://{{ ds.meta_data.local_hostname }}"
+

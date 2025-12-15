@@ -1,3 +1,7 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-resources: []
+resources:
+  # CAPK Provider must be installed first (either via GitOps or clusterctl)
+  - capk-provider
+  # Kubemark cluster templates
+  - bases
