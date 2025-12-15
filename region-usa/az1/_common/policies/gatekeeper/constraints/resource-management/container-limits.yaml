@@ -26,6 +26,7 @@ spec:
       - capg-system
       - capv-system
       - caaph-system
+      - capk-system
   parameters:
     # Customize these limits based on your cluster capacity
     maxCpu: "8000m"      # 8 CPU cores max per container

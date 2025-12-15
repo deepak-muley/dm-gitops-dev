@@ -26,6 +26,7 @@ spec:
       - capg-system
       - capv-system
       - caaph-system
+      - capk-system
   parameters:
     requireRequests: true
     requireLimits: true

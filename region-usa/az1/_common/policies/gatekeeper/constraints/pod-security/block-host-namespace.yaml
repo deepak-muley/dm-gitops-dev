@@ -26,6 +26,7 @@ spec:
       - capg-system
       - capv-system
       - caaph-system
+      - capk-system
   parameters:
     # CNI and monitoring tools may need hostNetwork
     allowHostNetwork: false
