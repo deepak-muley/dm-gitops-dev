@@ -32,14 +32,14 @@ spec:
               echo "=== NKP Network Connectivity Test ==="
               echo "Date: $(date)"
               echo ""
-              
+
               FAILED=0
-              
+
               test_port() {
                 local host=$1
                 local port=$2
                 local name=$3
-                
+
                 if nc -z -w 5 "$host" "$port" 2>/dev/null; then
                   echo "✅ PASS: $name ($host:$port)"
                 else
@@ -47,29 +47,29 @@ spec:
                   FAILED=$((FAILED + 1))
                 fi
               }
-              
+
               echo "=== Internal Cluster Connectivity ==="
-              
+
               # Kubernetes API
               test_port "kubernetes.default.svc" 443 "Kubernetes API"
-              
+
               # CoreDNS
               test_port "kube-dns.kube-system.svc" 53 "CoreDNS"
-              
+
               # Traefik Ingress (internal)
               test_port "kommander-traefik.kommander.svc" 443 "Traefik HTTPS"
               test_port "kommander-traefik.kommander.svc" 80 "Traefik HTTP"
-              
+
               echo ""
               echo "=== External Connectivity (Skip in Airgapped) ==="
-              
+
               # Container Registries (connected environments only)
               # Uncomment these for connected environments
               # test_port "registry.k8s.io" 443 "Kubernetes Registry"
               # test_port "docker.io" 443 "Docker Hub"
               # test_port "ghcr.io" 443 "GitHub Registry"
               # test_port "quay.io" 443 "Quay.io"
-              
+
               echo ""
               echo "=== Summary ==="
               if [ $FAILED -eq 0 ]; then
@@ -107,14 +107,14 @@ spec:
                 - |
                   echo "=== NKP Network Connectivity Test ==="
                   echo "Date: $(date)"
-                  
+
                   FAILED=0
-                  
+
                   test_port() {
                     local host=$1
                     local port=$2
                     local name=$3
-                    
+
                     if nc -z -w 5 "$host" "$port" 2>/dev/null; then
                       echo "✅ $name"
                     else
@@ -122,12 +122,12 @@ spec:
                       FAILED=$((FAILED + 1))
                     fi
                   }
-                  
+
                   # Core services
                   test_port "kubernetes.default.svc" 443 "Kubernetes API"
                   test_port "kube-dns.kube-system.svc" 53 "CoreDNS"
                   test_port "kommander-traefik.kommander.svc" 443 "Traefik"
-                  
+
                   if [ $FAILED -gt 0 ]; then
                     echo "WARNING: $FAILED connectivity test(s) failed!"
                     exit 1
