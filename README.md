@@ -92,9 +92,17 @@ kubectl apply -f https://raw.githubusercontent.com/deepak-muley/dm-nkp-gitops-in
 │       │           │   ├── platform-applications/
 │       │           │   └── nkp-nutanix-products-catalog-applications/
 │       │           ├── clusters/                   # CAPI workload cluster definitions
-│       │           │   ├── bases/
-│       │           │   ├── overlays/
-│       │           │   └── sealed-secrets/
+│       │           │   ├── nutanix-infra/         # Nutanix CAPI clusters
+│       │           │   │   ├── bases/
+│       │           │   │   ├── overlays/
+│       │           │   │   └── sealed-secrets/
+│       │           │   ├── eks-infra/             # AWS EKS clusters (placeholder)
+│       │           │   ├── aks-infra/             # Azure AKS clusters (placeholder)
+│       │           │   ├── gke-infra/             # GCP GKE clusters (placeholder)
+│       │           │   ├── eks-a-infra/           # AWS EKS Anywhere clusters (placeholder)
+│       │           │   ├── openshift-infra/       # OpenShift clusters (placeholder)
+│       │           │   ├── kubemark-infra/        # Kubemark clusters (placeholder)
+│       │           │   └── docker-infra/          # Docker/Kind clusters (placeholder)
 │       │           ├── projects/
 │       │           │   └── dm-dev-project/
 │       │           ├── rbac/
@@ -224,11 +232,19 @@ Level 2 (Depends on project-definitions):
 
 ## Adding a New CAPI Cluster
 
-1. Add cluster YAML under `.../management-cluster/workspaces/<ws>/clusters/bases/`
-2. Add overlay patch under `.../clusters/overlays/<version>/`
-3. Add sealed secrets under `.../clusters/sealed-secrets/`
-4. Update the respective `kustomization.yaml` files
-5. Create workload cluster GitOps folder under `workload-clusters/<cluster-name>/`
+1. Choose the appropriate infra folder based on provider:
+   - Nutanix: `.../clusters/nutanix-infra/`
+   - AWS EKS: `.../clusters/eks-infra/`
+   - Azure AKS: `.../clusters/aks-infra/`
+   - GCP GKE: `.../clusters/gke-infra/`
+   - EKS Anywhere: `.../clusters/eks-a-infra/`
+   - OpenShift: `.../clusters/openshift-infra/`
+   - Docker/Kind: `.../clusters/docker-infra/`
+2. Add cluster YAML under `.../clusters/<provider>-infra/bases/`
+3. Add overlay patch under `.../clusters/<provider>-infra/overlays/<version>/`
+4. Add sealed secrets under `.../clusters/<provider>-infra/sealed-secrets/`
+5. Update the respective `kustomization.yaml` files
+6. Create workload cluster GitOps folder under `workload-clusters/<cluster-name>/`
 
 ## Currently Active Configuration
 

@@ -17,9 +17,17 @@ management-cluster/
         ├── application-catalogs/   # Custom app catalogs
         ├── applications/           # Workspace-level applications
         ├── clusters/               # CAPI workload cluster definitions
-        │   ├── bases/
-        │   ├── overlays/
-        │   └── sealed-secrets/
+        │   ├── nutanix-infra/      # Nutanix CAPI clusters
+        │   │   ├── bases/
+        │   │   ├── overlays/
+        │   │   └── sealed-secrets/
+        │   ├── eks-infra/          # AWS EKS clusters (placeholder)
+        │   ├── aks-infra/          # Azure AKS clusters (placeholder)
+        │   ├── gke-infra/          # GCP GKE clusters (placeholder)
+        │   ├── eks-a-infra/        # AWS EKS Anywhere (placeholder)
+        │   ├── openshift-infra/    # OpenShift clusters (placeholder)
+        │   ├── kubemark-infra/     # Kubemark clusters (placeholder)
+        │   └── docker-infra/       # Docker/Kind clusters (placeholder)
         ├── projects/
         ├── rbac/
         └── resourcequotas/
