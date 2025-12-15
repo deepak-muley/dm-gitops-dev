@@ -3,7 +3,7 @@
 apiVersion: templates.gatekeeper.sh/v1
 kind: ConstraintTemplate
 metadata:
-  name: k8sblocklatestag
+  name: k8sblocklatesttag
   annotations:
     description: >-
       Blocks containers from using the :latest tag or no tag at all.
@@ -16,7 +16,7 @@ spec:
   targets:
     - target: admission.k8s.gatekeeper.sh
       rego: |
-        package k8sblocklatestag
+        package k8sblocklatesttag
 
         violation[{"msg": msg}] {
           container := input.review.object.spec.containers[_]
