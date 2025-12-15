@@ -1,0 +1,44 @@
+# Block Wildcard RBAC
+# Prevents use of wildcards in RBAC rules
+apiVersion: templates.gatekeeper.sh/v1
+kind: ConstraintTemplate
+metadata:
+  name: k8sblockwildcardrbac
+  annotations:
+    description: >-
+      Blocks the use of wildcards (*) in RBAC rules.
+      Wildcards grant excessive permissions and violate least privilege.
+spec:
+  crd:
+    spec:
+      names:
+        kind: K8sBlockWildcardRBAC
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package k8sblockwildcardrbac
+
+        # Check for wildcard in apiGroups
+        violation[{"msg": msg}] {
+          rule := input.review.object.rules[_]
+          apiGroup := rule.apiGroups[_]
+          apiGroup == "*"
+          msg := "Wildcard (*) apiGroups in RBAC rules is not allowed"
+        }
+
+        # Check for wildcard in resources
+        violation[{"msg": msg}] {
+          rule := input.review.object.rules[_]
+          resource := rule.resources[_]
+          resource == "*"
+          msg := "Wildcard (*) resources in RBAC rules is not allowed"
+        }
+
+        # Check for wildcard in verbs
+        violation[{"msg": msg}] {
+          rule := input.review.object.rules[_]
+          verb := rule.verbs[_]
+          verb == "*"
+          msg := "Wildcard (*) verbs in RBAC rules is not allowed"
+        }
+

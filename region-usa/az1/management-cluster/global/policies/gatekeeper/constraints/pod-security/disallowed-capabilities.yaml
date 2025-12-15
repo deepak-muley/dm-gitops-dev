@@ -1,0 +1,30 @@
+# Disallowed Capabilities Constraint
+# CRITICAL: Blocks dangerous Linux capabilities
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sDisallowedCapabilities
+metadata:
+  name: disallowed-dangerous-capabilities
+  labels:
+    policy-category: pod-security
+    policy-severity: critical
+spec:
+  enforcementAction: warn
+  match:
+    kinds:
+      - apiGroups: [""]
+        kinds: ["Pod"]
+  parameters:
+    disallowedCapabilities:
+      # Most dangerous capabilities
+      - SYS_ADMIN        # Full system administration
+      - NET_ADMIN        # Network administration
+      - SYS_PTRACE       # Process tracing (debugging)
+      - SYS_MODULE       # Load kernel modules
+      - SYS_RAWIO        # Raw I/O access
+      - SYS_BOOT         # Reboot system
+      - SYS_TIME         # Modify system time
+      - DAC_OVERRIDE     # Bypass file permissions
+      - SETUID           # Set user ID
+      - SETGID           # Set group ID
+      - NET_RAW          # Raw network access (ping)
+      - MKNOD            # Create device files

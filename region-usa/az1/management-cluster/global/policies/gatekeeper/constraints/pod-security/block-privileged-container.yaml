@@ -1,0 +1,16 @@
+# Block Privileged Containers Constraint
+# CRITICAL: Prevents container escape via privileged mode
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sBlockPrivilegedContainer
+metadata:
+  name: block-privileged-containers
+  labels:
+    policy-category: pod-security
+    policy-severity: critical
+spec:
+  # Start with 'warn' for safe rollout, change to 'deny' after validation
+  enforcementAction: warn
+  match:
+    kinds:
+      - apiGroups: [""]
+        kinds: ["Pod"]

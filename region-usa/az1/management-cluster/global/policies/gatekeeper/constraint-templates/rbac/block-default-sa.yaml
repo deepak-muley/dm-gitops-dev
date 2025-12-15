@@ -1,0 +1,30 @@
+# Block Default ServiceAccount
+# Prevents pods from using the default ServiceAccount
+apiVersion: templates.gatekeeper.sh/v1
+kind: ConstraintTemplate
+metadata:
+  name: k8sblockdefaultsa
+  annotations:
+    description: >-
+      Blocks pods from using the default ServiceAccount.
+      Workloads should use dedicated ServiceAccounts with minimal permissions.
+spec:
+  crd:
+    spec:
+      names:
+        kind: K8sBlockDefaultSA
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package k8sblockdefaultsa
+
+        violation[{"msg": msg}] {
+          input.review.object.spec.serviceAccountName == "default"
+          msg := "Using 'default' ServiceAccount is not allowed. Create a dedicated ServiceAccount with minimal permissions."
+        }
+
+        violation[{"msg": msg}] {
+          not input.review.object.spec.serviceAccountName
+          msg := "ServiceAccount must be explicitly specified. Create a dedicated ServiceAccount with minimal permissions."
+        }
+

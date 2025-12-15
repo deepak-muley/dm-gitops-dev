@@ -1,0 +1,20 @@
+# Block Host Namespace Constraint
+# CRITICAL: Prevents pods from sharing host namespaces
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sBlockHostNamespace
+metadata:
+  name: block-host-namespace
+  labels:
+    policy-category: pod-security
+    policy-severity: critical
+spec:
+  enforcementAction: warn
+  match:
+    kinds:
+      - apiGroups: [""]
+        kinds: ["Pod"]
+  parameters:
+    # CNI and monitoring tools may need hostNetwork
+    allowHostNetwork: false
+    allowHostPID: false
+    allowHostIPC: false

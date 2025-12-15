@@ -1,0 +1,26 @@
+# Block LoadBalancer Services
+# Prevents direct LoadBalancer exposure (use Ingress instead)
+apiVersion: templates.gatekeeper.sh/v1
+kind: ConstraintTemplate
+metadata:
+  name: k8sblockloadbalancer
+  annotations:
+    description: >-
+      Blocks services of type LoadBalancer. Direct LoadBalancer exposure
+      can lead to IP address exhaustion and security concerns.
+      Use ClusterIP with Ingress instead for controlled external access.
+spec:
+  crd:
+    spec:
+      names:
+        kind: K8sBlockLoadBalancer
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package k8sblockloadbalancer
+
+        violation[{"msg": msg}] {
+          input.review.object.spec.type == "LoadBalancer"
+          msg := "LoadBalancer services are not allowed. Use ClusterIP with Ingress for external access."
+        }
+

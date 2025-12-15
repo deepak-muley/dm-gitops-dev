@@ -1,0 +1,13 @@
+# Pod Security Constraints
+# NOTE: These start in 'warn' mode for safe rollout
+# Change to 'deny' after validating no critical workloads are affected
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - block-privileged-container.yaml
+  - block-privilege-escalation.yaml
+  - require-run-as-nonroot.yaml
+  - block-host-namespace.yaml
+  - disallowed-capabilities.yaml
+  - require-readonly-rootfs.yaml
+

@@ -1,0 +1,9 @@
+# RBAC Constraint Templates
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - block-default-sa.yaml
+  - block-wildcard-rbac.yaml
+  - block-cluster-admin.yaml
+  - block-automount-sa-token.yaml
+

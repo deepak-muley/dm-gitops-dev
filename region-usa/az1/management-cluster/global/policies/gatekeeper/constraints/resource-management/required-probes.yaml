@@ -1,0 +1,18 @@
+# Required Probes Constraint
+# MEDIUM: Enables Kubernetes to detect and recover from failures
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sRequiredProbes
+metadata:
+  name: require-health-probes
+  labels:
+    policy-category: resource-management
+    policy-severity: medium
+spec:
+  enforcementAction: warn
+  match:
+    kinds:
+      - apiGroups: [""]
+        kinds: ["Pod"]
+  parameters:
+    requireLiveness: true
+    requireReadiness: true

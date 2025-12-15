@@ -1,0 +1,38 @@
+# Require Ingress TLS
+# Ensures all Ingress resources have TLS configured
+apiVersion: templates.gatekeeper.sh/v1
+kind: ConstraintTemplate
+metadata:
+  name: k8srequireingresstls
+  annotations:
+    description: >-
+      Requires Ingress resources to have TLS configured.
+      All external traffic should be encrypted in transit.
+spec:
+  crd:
+    spec:
+      names:
+        kind: K8sRequireIngressTLS
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package k8srequireingresstls
+
+        violation[{"msg": msg}] {
+          input.review.object.kind == "Ingress"
+          not has_tls
+          msg := "Ingress must have TLS configured for secure communication"
+        }
+
+        violation[{"msg": msg}] {
+          input.review.object.kind == "Ingress"
+          tls := input.review.object.spec.tls[_]
+          not tls.secretName
+          msg := "Ingress TLS must specify a secretName"
+        }
+
+        has_tls {
+          input.review.object.spec.tls
+          count(input.review.object.spec.tls) > 0
+        }
+

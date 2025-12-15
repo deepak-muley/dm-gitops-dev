@@ -1,0 +1,39 @@
+# Allowed Container Repositories Constraint
+# CRITICAL: Supply chain security - only allow trusted registries
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sAllowedRepos
+metadata:
+  name: allowed-container-repos
+  labels:
+    policy-category: image-security
+    policy-severity: critical
+spec:
+  enforcementAction: warn
+  match:
+    kinds:
+      - apiGroups: [""]
+        kinds: ["Pod"]
+  parameters:
+    repos:
+      # =========================================
+      # CUSTOMIZE THIS LIST FOR YOUR ORGANIZATION
+      # =========================================
+      # Common public registries (review and restrict as needed)
+      - "docker.io/library/" # Official Docker images
+      - "docker.io/" # Docker Hub
+      - "gcr.io/" # Google Container Registry
+      - "ghcr.io/" # GitHub Container Registry
+      - "quay.io/" # Red Hat Quay
+      - "registry.k8s.io/" # Kubernetes official images
+      - "k8s.gcr.io/" # Legacy Kubernetes images
+
+      # Nutanix registries
+      - "registry.nutanix.com/"
+      - "nutanix/"
+
+      # D2iQ / NKP registries
+      - "mesosphere/"
+      - "docker.io/mesosphere/"
+
+      # Add your organization's private registries below
+      # - "your-registry.example.com/"

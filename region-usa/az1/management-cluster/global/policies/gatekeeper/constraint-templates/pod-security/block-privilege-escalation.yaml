@@ -1,0 +1,50 @@
+# Block Privilege Escalation
+# Prevents containers from gaining more privileges than their parent process
+apiVersion: templates.gatekeeper.sh/v1
+kind: ConstraintTemplate
+metadata:
+  name: k8sblockprivilegeescalation
+  annotations:
+    description: >-
+      Requires containers to set allowPrivilegeEscalation to false.
+      This prevents child processes from gaining more privileges than parent.
+spec:
+  crd:
+    spec:
+      names:
+        kind: K8sBlockPrivilegeEscalation
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package k8sblockprivilegeescalation
+
+        violation[{"msg": msg}] {
+          container := input.review.object.spec.containers[_]
+          not has_security_context(container)
+          msg := sprintf("Container %v must set securityContext.allowPrivilegeEscalation to false", [container.name])
+        }
+
+        violation[{"msg": msg}] {
+          container := input.review.object.spec.containers[_]
+          has_security_context(container)
+          not container.securityContext.allowPrivilegeEscalation == false
+          msg := sprintf("Container %v must set securityContext.allowPrivilegeEscalation to false", [container.name])
+        }
+
+        violation[{"msg": msg}] {
+          container := input.review.object.spec.initContainers[_]
+          not has_security_context(container)
+          msg := sprintf("Init container %v must set securityContext.allowPrivilegeEscalation to false", [container.name])
+        }
+
+        violation[{"msg": msg}] {
+          container := input.review.object.spec.initContainers[_]
+          has_security_context(container)
+          not container.securityContext.allowPrivilegeEscalation == false
+          msg := sprintf("Init container %v must set securityContext.allowPrivilegeEscalation to false", [container.name])
+        }
+
+        has_security_context(container) {
+          container.securityContext
+        }
+

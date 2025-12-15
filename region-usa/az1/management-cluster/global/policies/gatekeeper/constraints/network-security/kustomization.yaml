@@ -1,0 +1,10 @@
+# Network Security Constraints
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - block-nodeport.yaml
+  # Uncomment if you want to restrict LoadBalancer services
+  # - block-loadbalancer.yaml
+  - require-ingress-tls.yaml
+  - block-host-ports.yaml
+

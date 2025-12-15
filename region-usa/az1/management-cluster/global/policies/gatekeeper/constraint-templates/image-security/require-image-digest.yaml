@@ -1,0 +1,36 @@
+# Require Image Digest
+# Ensures immutable image references via digest
+apiVersion: templates.gatekeeper.sh/v1
+kind: ConstraintTemplate
+metadata:
+  name: k8srequireimagedigest
+  annotations:
+    description: >-
+      Requires container images to be referenced by digest (@sha256:...)
+      rather than just tags. This ensures immutable deployments.
+spec:
+  crd:
+    spec:
+      names:
+        kind: K8sRequireImageDigest
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package k8srequireimagedigest
+
+        violation[{"msg": msg}] {
+          container := input.review.object.spec.containers[_]
+          not has_digest(container.image)
+          msg := sprintf("Container %v image must use digest (sha256). Current: %v", [container.name, container.image])
+        }
+
+        violation[{"msg": msg}] {
+          container := input.review.object.spec.initContainers[_]
+          not has_digest(container.image)
+          msg := sprintf("Init container %v image must use digest (sha256). Current: %v", [container.name, container.image])
+        }
+
+        has_digest(image) {
+          contains(image, "@sha256:")
+        }
+

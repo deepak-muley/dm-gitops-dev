@@ -1,0 +1,17 @@
+# Block Automount SA Token Constraint
+# MEDIUM: Limits credential exposure
+# NOTE: This is strict - many applications need API access
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sBlockAutomountSAToken
+metadata:
+  name: require-explicit-automount
+  labels:
+    policy-category: rbac
+    policy-severity: medium
+spec:
+  # Keep as dryrun - this is a strict policy
+  enforcementAction: dryrun
+  match:
+    kinds:
+      - apiGroups: [""]
+        kinds: ["Pod"]

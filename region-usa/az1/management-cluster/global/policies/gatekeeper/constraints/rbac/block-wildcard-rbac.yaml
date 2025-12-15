@@ -1,0 +1,15 @@
+# Block Wildcard RBAC Constraint
+# CRITICAL: Prevents overly permissive RBAC rules
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sBlockWildcardRBAC
+metadata:
+  name: block-wildcard-rbac
+  labels:
+    policy-category: rbac
+    policy-severity: critical
+spec:
+  enforcementAction: warn
+  match:
+    kinds:
+      - apiGroups: ["rbac.authorization.k8s.io"]
+        kinds: ["Role", "ClusterRole"]

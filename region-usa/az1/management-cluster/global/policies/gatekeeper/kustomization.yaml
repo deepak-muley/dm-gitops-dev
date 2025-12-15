@@ -1,0 +1,10 @@
+# Gatekeeper Policies - Main Kustomization
+# This aggregates all constraint templates and constraints
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  # Constraint Templates must be applied BEFORE constraints
+  - constraint-templates
+  # Constraints that use the templates
+  - constraints
+

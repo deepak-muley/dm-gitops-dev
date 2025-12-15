@@ -1,0 +1,18 @@
+# Required Resources Constraint
+# CRITICAL: Prevents resource exhaustion and enables proper scheduling
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sRequiredResources
+metadata:
+  name: require-resource-requests-limits
+  labels:
+    policy-category: resource-management
+    policy-severity: critical
+spec:
+  enforcementAction: warn
+  match:
+    kinds:
+      - apiGroups: [""]
+        kinds: ["Pod"]
+  parameters:
+    requireRequests: true
+    requireLimits: true

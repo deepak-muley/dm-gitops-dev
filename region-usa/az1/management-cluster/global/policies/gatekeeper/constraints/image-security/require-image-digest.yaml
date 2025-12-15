@@ -1,0 +1,17 @@
+# Require Image Digest Constraint
+# MEDIUM: Ensures immutable image references
+# NOTE: This is strict - only enable in high-security environments
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sRequireImageDigest
+metadata:
+  name: require-image-digest
+  labels:
+    policy-category: image-security
+    policy-severity: medium
+spec:
+  # Keep as dryrun by default - this is a strict policy
+  enforcementAction: dryrun
+  match:
+    kinds:
+      - apiGroups: [""]
+        kinds: ["Pod"]

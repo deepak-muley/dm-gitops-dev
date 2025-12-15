@@ -1,0 +1,78 @@
+# Required Resources
+# Ensures all containers have CPU/memory requests and limits
+apiVersion: templates.gatekeeper.sh/v1
+kind: ConstraintTemplate
+metadata:
+  name: k8srequiredresources
+  annotations:
+    description: >-
+      Requires all containers to have CPU and memory requests and limits set.
+      This prevents resource exhaustion and enables proper scheduling.
+spec:
+  crd:
+    spec:
+      names:
+        kind: K8sRequiredResources
+      validation:
+        openAPIV3Schema:
+          type: object
+          properties:
+            requireRequests:
+              type: boolean
+              description: Require resource requests
+            requireLimits:
+              type: boolean
+              description: Require resource limits
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package k8srequiredresources
+
+        # Check CPU limits
+        violation[{"msg": msg}] {
+          require_limits
+          container := input.review.object.spec.containers[_]
+          not container.resources.limits.cpu
+          msg := sprintf("Container %v must have CPU limits set", [container.name])
+        }
+
+        # Check memory limits
+        violation[{"msg": msg}] {
+          require_limits
+          container := input.review.object.spec.containers[_]
+          not container.resources.limits.memory
+          msg := sprintf("Container %v must have memory limits set", [container.name])
+        }
+
+        # Check CPU requests
+        violation[{"msg": msg}] {
+          require_requests
+          container := input.review.object.spec.containers[_]
+          not container.resources.requests.cpu
+          msg := sprintf("Container %v must have CPU requests set", [container.name])
+        }
+
+        # Check memory requests
+        violation[{"msg": msg}] {
+          require_requests
+          container := input.review.object.spec.containers[_]
+          not container.resources.requests.memory
+          msg := sprintf("Container %v must have memory requests set", [container.name])
+        }
+
+        require_limits {
+          input.parameters.requireLimits == true
+        }
+
+        require_limits {
+          not input.parameters.requireLimits
+        }
+
+        require_requests {
+          input.parameters.requireRequests == true
+        }
+
+        require_requests {
+          not input.parameters.requireRequests
+        }
+

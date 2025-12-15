@@ -1,0 +1,18 @@
+# Block Host Ports Constraint
+# HIGH: Prevents containers from binding to host ports
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sBlockHostPorts
+metadata:
+  name: block-host-ports
+  labels:
+    policy-category: network-security
+    policy-severity: high
+spec:
+  enforcementAction: warn
+  match:
+    kinds:
+      - apiGroups: [""]
+        kinds: ["Pod"]
+  parameters:
+    # Allow specific host ports if needed (empty by default)
+    allowedPorts: []

@@ -1,0 +1,16 @@
+# Gatekeeper Constraints
+# Constraints apply the templates with specific parameters
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  # Pod Security Constraints
+  - pod-security
+  # Image Security Constraints
+  - image-security
+  # Resource Management Constraints
+  - resource-management
+  # Network Security Constraints
+  - network-security
+  # RBAC Constraints
+  - rbac
+

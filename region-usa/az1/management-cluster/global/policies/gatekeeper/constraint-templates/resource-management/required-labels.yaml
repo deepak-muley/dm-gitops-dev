@@ -1,0 +1,54 @@
+# Required Labels
+# Ensures resources have required metadata labels
+apiVersion: templates.gatekeeper.sh/v1
+kind: ConstraintTemplate
+metadata:
+  name: k8srequiredlabels
+  annotations:
+    description: >-
+      Requires resources to have specified labels.
+      Labels enable proper organization, monitoring, and cost allocation.
+spec:
+  crd:
+    spec:
+      names:
+        kind: K8sRequiredLabels
+      validation:
+        openAPIV3Schema:
+          type: object
+          properties:
+            labels:
+              type: array
+              items:
+                type: object
+                properties:
+                  key:
+                    type: string
+                    description: Label key that must be present
+                  allowedRegex:
+                    type: string
+                    description: Optional regex pattern for label value
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package k8srequiredlabels
+
+        violation[{"msg": msg}] {
+          required := input.parameters.labels[_]
+          not has_label(required.key)
+          msg := sprintf("Resource must have label: %v", [required.key])
+        }
+
+        violation[{"msg": msg}] {
+          required := input.parameters.labels[_]
+          has_label(required.key)
+          required.allowedRegex
+          value := input.review.object.metadata.labels[required.key]
+          not re_match(required.allowedRegex, value)
+          msg := sprintf("Label %v value '%v' does not match pattern '%v'", [required.key, value, required.allowedRegex])
+        }
+
+        has_label(key) {
+          input.review.object.metadata.labels[key]
+        }
+

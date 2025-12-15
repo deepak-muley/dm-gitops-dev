@@ -1,0 +1,17 @@
+# Block LoadBalancer Services Constraint
+# MEDIUM: Prevents direct LoadBalancer exposure
+# NOTE: Only enable if using Ingress for all external access
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sBlockLoadBalancer
+metadata:
+  name: block-loadbalancer-services
+  labels:
+    policy-category: network-security
+    policy-severity: medium
+spec:
+  # Keep as dryrun - LoadBalancer is commonly used
+  enforcementAction: dryrun
+  match:
+    kinds:
+      - apiGroups: [""]
+        kinds: ["Service"]

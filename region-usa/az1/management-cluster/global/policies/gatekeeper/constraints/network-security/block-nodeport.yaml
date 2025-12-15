@@ -1,0 +1,15 @@
+# Block NodePort Services Constraint
+# MEDIUM: Prevents direct node port exposure
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sBlockNodePort
+metadata:
+  name: block-nodeport-services
+  labels:
+    policy-category: network-security
+    policy-severity: medium
+spec:
+  enforcementAction: warn
+  match:
+    kinds:
+      - apiGroups: [""]
+        kinds: ["Service"]

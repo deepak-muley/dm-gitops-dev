@@ -1,0 +1,15 @@
+# Require Ingress TLS Constraint
+# HIGH: Ensures encrypted communication for external traffic
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sRequireIngressTLS
+metadata:
+  name: require-ingress-tls
+  labels:
+    policy-category: network-security
+    policy-severity: high
+spec:
+  enforcementAction: warn
+  match:
+    kinds:
+      - apiGroups: ["networking.k8s.io"]
+        kinds: ["Ingress"]

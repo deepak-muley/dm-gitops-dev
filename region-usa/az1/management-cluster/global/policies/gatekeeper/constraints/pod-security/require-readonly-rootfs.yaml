@@ -1,0 +1,15 @@
+# Require Read-Only Root Filesystem Constraint
+# MEDIUM: Prevents modification of application binaries
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sRequireReadOnlyRootFs
+metadata:
+  name: require-readonly-rootfs
+  labels:
+    policy-category: pod-security
+    policy-severity: medium
+spec:
+  enforcementAction: warn
+  match:
+    kinds:
+      - apiGroups: [""]
+        kinds: ["Pod"]

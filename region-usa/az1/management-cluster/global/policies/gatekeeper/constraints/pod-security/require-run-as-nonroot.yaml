@@ -1,0 +1,15 @@
+# Require Run As Non-Root Constraint
+# HIGH: Ensures containers don't run as root user
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sRequireRunAsNonRoot
+metadata:
+  name: require-run-as-nonroot
+  labels:
+    policy-category: pod-security
+    policy-severity: high
+spec:
+  enforcementAction: warn
+  match:
+    kinds:
+      - apiGroups: [""]
+        kinds: ["Pod"]

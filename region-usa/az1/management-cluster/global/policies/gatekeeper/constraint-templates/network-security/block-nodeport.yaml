@@ -1,0 +1,26 @@
+# Block NodePort Services
+# Prevents direct node port exposure
+apiVersion: templates.gatekeeper.sh/v1
+kind: ConstraintTemplate
+metadata:
+  name: k8sblocknodeport
+  annotations:
+    description: >-
+      Blocks services of type NodePort. NodePort exposes services on each node's
+      IP at a static port, which is a security and management concern.
+      Use ClusterIP with Ingress or LoadBalancer instead.
+spec:
+  crd:
+    spec:
+      names:
+        kind: K8sBlockNodePort
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package k8sblocknodeport
+
+        violation[{"msg": msg}] {
+          input.review.object.spec.type == "NodePort"
+          msg := "NodePort services are not allowed. Use ClusterIP with Ingress instead."
+        }
+

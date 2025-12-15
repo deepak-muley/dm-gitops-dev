@@ -1,0 +1,9 @@
+# Network Security Constraint Templates
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - block-nodeport.yaml
+  - block-loadbalancer.yaml
+  - require-ingress-tls.yaml
+  - block-host-ports.yaml
+

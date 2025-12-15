@@ -1,0 +1,32 @@
+# Block Cluster Admin Bindings Constraint
+# CRITICAL: Restricts who can have cluster-admin privileges
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sBlockClusterAdmin
+metadata:
+  name: restrict-cluster-admin
+  labels:
+    policy-category: rbac
+    policy-severity: critical
+spec:
+  enforcementAction: warn
+  match:
+    kinds:
+      - apiGroups: ["rbac.authorization.k8s.io"]
+        kinds: ["ClusterRoleBinding"]
+  parameters:
+    # Subjects that are allowed to have cluster-admin
+    # Customize this list for your organization
+    allowedSubjects:
+      # System components
+      - kind: User
+        name: "system:admin"
+      - kind: User
+        name: "system:kube-controller-manager"
+      - kind: User
+        name: "system:kube-scheduler"
+      # Service accounts (add your admin SAs here)
+      - kind: ServiceAccount
+        name: "cluster-admin"
+      # Groups (add admin groups from your IdP)
+      - kind: Group
+        name: "system:masters"

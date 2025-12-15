@@ -1,0 +1,9 @@
+# Resource Management Constraint Templates
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - required-resources.yaml
+  - required-labels.yaml
+  - required-probes.yaml
+  - container-limits.yaml
+

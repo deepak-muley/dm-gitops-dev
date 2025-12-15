@@ -1,0 +1,48 @@
+# Block Cluster Admin Bindings
+# Prevents binding to the cluster-admin ClusterRole
+apiVersion: templates.gatekeeper.sh/v1
+kind: ConstraintTemplate
+metadata:
+  name: k8sblockclusteradmin
+  annotations:
+    description: >-
+      Blocks ClusterRoleBindings that grant cluster-admin privileges.
+      cluster-admin has full access to all resources and should be restricted.
+spec:
+  crd:
+    spec:
+      names:
+        kind: K8sBlockClusterAdmin
+      validation:
+        openAPIV3Schema:
+          type: object
+          properties:
+            allowedSubjects:
+              type: array
+              items:
+                type: object
+                properties:
+                  kind:
+                    type: string
+                  name:
+                    type: string
+              description: Subjects allowed to have cluster-admin
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package k8sblockclusteradmin
+
+        violation[{"msg": msg}] {
+          input.review.object.kind == "ClusterRoleBinding"
+          input.review.object.roleRef.name == "cluster-admin"
+          subject := input.review.object.subjects[_]
+          not is_allowed(subject)
+          msg := sprintf("Binding to cluster-admin is restricted. Subject %v/%v is not allowed.", [subject.kind, subject.name])
+        }
+
+        is_allowed(subject) {
+          allowed := input.parameters.allowedSubjects[_]
+          subject.kind == allowed.kind
+          subject.name == allowed.name
+        }
+

@@ -1,0 +1,19 @@
+# Container Limits Constraint
+# MEDIUM: Prevents individual containers from consuming excessive resources
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sContainerLimits
+metadata:
+  name: enforce-max-container-limits
+  labels:
+    policy-category: resource-management
+    policy-severity: medium
+spec:
+  enforcementAction: warn
+  match:
+    kinds:
+      - apiGroups: [""]
+        kinds: ["Pod"]
+  parameters:
+    # Customize these limits based on your cluster capacity
+    maxCpu: "8000m"      # 8 CPU cores max per container
+    maxMemory: "32Gi"    # 32 GB memory max per container

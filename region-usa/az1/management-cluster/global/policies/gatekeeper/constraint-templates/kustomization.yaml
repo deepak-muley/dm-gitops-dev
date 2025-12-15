@@ -1,0 +1,16 @@
+# Gatekeeper Constraint Templates
+# Templates define the policy logic (Rego)
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  # Pod Security Templates
+  - pod-security
+  # Image Security Templates
+  - image-security
+  # Resource Management Templates
+  - resource-management
+  # Network Security Templates
+  - network-security
+  # RBAC Templates
+  - rbac
+

@@ -1,0 +1,52 @@
+# Block Host Ports
+# Prevents containers from binding to host ports
+apiVersion: templates.gatekeeper.sh/v1
+kind: ConstraintTemplate
+metadata:
+  name: k8sblockhostports
+  annotations:
+    description: >-
+      Blocks containers from using host ports. Host ports bypass network
+      policies and can cause port conflicts across pods.
+spec:
+  crd:
+    spec:
+      names:
+        kind: K8sBlockHostPorts
+      validation:
+        openAPIV3Schema:
+          type: object
+          properties:
+            allowedPorts:
+              type: array
+              items:
+                type: integer
+              description: List of allowed host ports (for exceptions)
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package k8sblockhostports
+
+        violation[{"msg": msg}] {
+          container := input.review.object.spec.containers[_]
+          port := container.ports[_]
+          port.hostPort
+          port.hostPort != 0
+          not is_allowed(port.hostPort)
+          msg := sprintf("Container %v uses hostPort %v which is not allowed", [container.name, port.hostPort])
+        }
+
+        violation[{"msg": msg}] {
+          container := input.review.object.spec.initContainers[_]
+          port := container.ports[_]
+          port.hostPort
+          port.hostPort != 0
+          not is_allowed(port.hostPort)
+          msg := sprintf("Init container %v uses hostPort %v which is not allowed", [container.name, port.hostPort])
+        }
+
+        is_allowed(port) {
+          allowed := input.parameters.allowedPorts[_]
+          port == allowed
+        }
+

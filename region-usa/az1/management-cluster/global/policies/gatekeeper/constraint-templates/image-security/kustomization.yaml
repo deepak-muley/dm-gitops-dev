@@ -1,0 +1,8 @@
+# Image Security Constraint Templates
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - allowed-repos.yaml
+  - block-latest-tag.yaml
+  - require-image-digest.yaml
+

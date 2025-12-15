@@ -1,0 +1,15 @@
+# Block Default ServiceAccount Constraint
+# HIGH: Ensures workloads use dedicated ServiceAccounts
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sBlockDefaultSA
+metadata:
+  name: block-default-serviceaccount
+  labels:
+    policy-category: rbac
+    policy-severity: high
+spec:
+  enforcementAction: warn
+  match:
+    kinds:
+      - apiGroups: [""]
+        kinds: ["Pod"]

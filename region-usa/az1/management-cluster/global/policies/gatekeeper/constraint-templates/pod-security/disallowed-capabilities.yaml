@@ -1,0 +1,53 @@
+# Disallowed Capabilities
+# Blocks dangerous Linux capabilities that could be used to escape containers
+apiVersion: templates.gatekeeper.sh/v1
+kind: ConstraintTemplate
+metadata:
+  name: k8sdisallowedcapabilities
+  annotations:
+    description: >-
+      Blocks containers from using dangerous Linux capabilities.
+      Capabilities like SYS_ADMIN, NET_RAW can be used for container escape.
+spec:
+  crd:
+    spec:
+      names:
+        kind: K8sDisallowedCapabilities
+      validation:
+        openAPIV3Schema:
+          type: object
+          properties:
+            disallowedCapabilities:
+              type: array
+              items:
+                type: string
+              description: List of capabilities that are not allowed
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package k8sdisallowedcapabilities
+
+        violation[{"msg": msg}] {
+          container := input.review.object.spec.containers[_]
+          cap := container.securityContext.capabilities.add[_]
+          disallowed := input.parameters.disallowedCapabilities[_]
+          upper(cap) == upper(disallowed)
+          msg := sprintf("Container %v has disallowed capability: %v", [container.name, cap])
+        }
+
+        violation[{"msg": msg}] {
+          container := input.review.object.spec.initContainers[_]
+          cap := container.securityContext.capabilities.add[_]
+          disallowed := input.parameters.disallowedCapabilities[_]
+          upper(cap) == upper(disallowed)
+          msg := sprintf("Init container %v has disallowed capability: %v", [container.name, cap])
+        }
+
+        violation[{"msg": msg}] {
+          container := input.review.object.spec.ephemeralContainers[_]
+          cap := container.securityContext.capabilities.add[_]
+          disallowed := input.parameters.disallowedCapabilities[_]
+          upper(cap) == upper(disallowed)
+          msg := sprintf("Ephemeral container %v has disallowed capability: %v", [container.name, cap])
+        }
+

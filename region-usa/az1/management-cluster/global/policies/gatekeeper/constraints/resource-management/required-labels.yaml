@@ -1,0 +1,26 @@
+# Required Labels Constraint
+# HIGH: Enables resource organization, monitoring, and cost allocation
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sRequiredLabels
+metadata:
+  name: require-standard-labels
+  labels:
+    policy-category: resource-management
+    policy-severity: high
+spec:
+  enforcementAction: warn
+  match:
+    kinds:
+      - apiGroups: ["apps"]
+        kinds: ["Deployment", "StatefulSet", "DaemonSet"]
+  parameters:
+    labels:
+      # Application identification
+      - key: "app.kubernetes.io/name"
+      # Version tracking
+      - key: "app.kubernetes.io/version"
+      # Component identification (optional - add as needed)
+      # - key: "app.kubernetes.io/component"
+      # Owner/team identification (customize regex as needed)
+      # - key: "team"
+      #   allowedRegex: "^[a-z]+-team$"

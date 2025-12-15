@@ -1,0 +1,15 @@
+# Block Latest Tag Constraint
+# HIGH: Ensures reproducible and auditable deployments
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sBlockLatestTag
+metadata:
+  name: block-latest-tag
+  labels:
+    policy-category: image-security
+    policy-severity: high
+spec:
+  enforcementAction: warn
+  match:
+    kinds:
+      - apiGroups: [""]
+        kinds: ["Pod"]
