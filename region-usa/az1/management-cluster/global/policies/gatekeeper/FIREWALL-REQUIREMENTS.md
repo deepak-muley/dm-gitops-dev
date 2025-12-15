@@ -44,8 +44,10 @@ This document lists all ports that need to be opened in your firewall for NKP to
 | 2379-2380 | TCP | etcd client/peer | ✅ Yes (control plane) |
 | 6443 | TCP | Kubernetes API | ✅ Yes |
 | 10250 | TCP | Kubelet | ✅ Yes |
-| 8472 | UDP | VXLAN (Cilium) | ✅ Yes |
+| 6081 | UDP | Geneve (Cilium) | ✅ Yes (NKP default) |
+| 8472 | UDP | VXLAN (Cilium) | If VXLAN mode |
 | 4240 | TCP | Cilium health | ✅ Yes |
+| 7946 | TCP/UDP | MetalLB memberlist | ✅ Yes (L2 mode) |
 | 4244 | TCP | Hubble relay | Optional |
 
 ---
@@ -74,13 +76,31 @@ This document lists all ports that need to be opened in your firewall for NKP to
 
 | Port | Protocol | Component | Direction | Description |
 |------|----------|-----------|-----------|-------------|
-| 8472 | UDP | VXLAN | Inter-node | Pod-to-pod overlay networking |
+| 6081 | UDP | Geneve | Inter-node | Pod-to-pod overlay networking (NKP default) |
+| 8472 | UDP | VXLAN | Inter-node | Alternative overlay (if VXLAN mode) |
 | 4240 | TCP | Cilium | Inter-node | Cilium health checks |
 | 4244 | TCP | Hubble | Internal | Hubble relay (observability) |
 | 4245 | TCP | Hubble | Internal | Hubble peer |
 | 9962 | TCP | Cilium | Internal | Cilium agent metrics |
 | 9963 | TCP | Cilium | Internal | Cilium operator metrics |
 | 9964 | TCP | Envoy | Internal | Envoy metrics |
+
+> **Note:** NKP uses **Geneve** tunnel protocol by default (port 6081), not VXLAN (port 8472).
+
+### MetalLB (Load Balancer)
+
+| Port | Protocol | Component | Direction | Description |
+|------|----------|-----------|-----------|-------------|
+| 7472 | TCP | MetalLB | Internal | Metrics |
+| 7473 | TCP | MetalLB | Internal | Metrics |
+| 7946 | TCP/UDP | MetalLB | Inter-node | Memberlist (L2 mode) |
+
+### Nutanix CSI/CCM
+
+| Port | Protocol | Component | Direction | Description |
+|------|----------|-----------|-----------|-------------|
+| 9807 | TCP | Nutanix CSI | Internal | CSI driver metrics |
+| 9808 | TCP | Nutanix CSI | Internal | CSI driver metrics |
 
 ### NKP Platform Services
 
