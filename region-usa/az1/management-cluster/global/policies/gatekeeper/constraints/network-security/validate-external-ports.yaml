@@ -1,0 +1,71 @@
+# Validate External Ports Constraint
+# Ensures Services only expose pre-approved ports externally
+#
+# PURPOSE: This policy helps customers maintain accurate firewall documentation.
+#          When a new service exposes an external port, this policy will warn
+#          so the FIREWALL-REQUIREMENTS.md can be updated.
+#
+# AIRGAPPED ENVIRONMENTS:
+#   This policy is especially useful in airgapped environments where strict
+#   firewall rules are required. It ensures no unexpected ports are exposed
+#   that would require firewall changes.
+#
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sValidateExternalPorts
+metadata:
+  name: validate-external-ports
+  labels:
+    policy-category: network-security
+    policy-severity: medium
+  annotations:
+    description: >-
+      Validates that externally exposed services use approved ports.
+      Update FIREWALL-REQUIREMENTS.md when adding new approved ports.
+spec:
+  enforcementAction: warn
+  match:
+    kinds:
+      - apiGroups: [""]
+        kinds: ["Service"]
+    # Exclude system namespaces where we trust the platform
+    excludedNamespaces:
+      - kube-system
+      - kube-public
+      - kube-node-lease
+  parameters:
+    # Approved external ports for LoadBalancer services
+    # These should match your firewall rules
+    allowedPorts:
+      # Standard web traffic
+      - 80      # HTTP
+      - 443     # HTTPS
+      
+      # NKP Platform specific
+      - 5000    # Container registry
+      - 8085    # Ceph dashboard
+      
+      # Kubernetes API (if exposed via LB)
+      - 6443    # Kubernetes API server
+      
+      # Common application ports (add as needed)
+      # - 8080  # HTTP alternate
+      # - 8443  # HTTPS alternate
+      # - 3306  # MySQL
+      # - 5432  # PostgreSQL
+      # - 6379  # Redis
+      # - 27017 # MongoDB
+
+    # Allowed NodePort range (Kubernetes default)
+    allowedNodePortRange:
+      min: 30000
+      max: 32767
+
+    # Services exempt from this policy
+    # Format: namespace/service-name
+    exemptServices:
+      # NKP platform services that need external access
+      - "kommander/kommander-traefik"
+      
+      # Add customer exemptions below
+      # - "my-namespace/my-service"
+

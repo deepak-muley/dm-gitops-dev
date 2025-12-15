@@ -1,0 +1,103 @@
+# Validate External Ports ConstraintTemplate
+# Ensures Services only expose pre-approved ports externally
+#
+# NOTE: This policy helps track which ports are exposed outside the cluster.
+#       For AIRGAPPED environments, this is particularly useful to ensure
+#       no unexpected outbound connections are required.
+apiVersion: templates.gatekeeper.sh/v1
+kind: ConstraintTemplate
+metadata:
+  name: k8svalidateexternalports
+  annotations:
+    description: >-
+      Validates that NodePort and LoadBalancer services only use approved ports.
+      Helps maintain firewall documentation and security posture.
+spec:
+  crd:
+    spec:
+      names:
+        kind: K8sValidateExternalPorts
+      validation:
+        openAPIV3Schema:
+          type: object
+          properties:
+            allowedPorts:
+              type: array
+              description: List of approved external port numbers
+              items:
+                type: integer
+            allowedNodePortRange:
+              type: object
+              description: Allowed NodePort range
+              properties:
+                min:
+                  type: integer
+                max:
+                  type: integer
+            exemptServices:
+              type: array
+              description: List of service names to exempt (namespace/name)
+              items:
+                type: string
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package k8svalidateexternalports
+
+        violation[{"msg": msg}] {
+          input.review.object.kind == "Service"
+          service := input.review.object
+          
+          # Check if it's an externally exposed service
+          service.spec.type == "LoadBalancer"
+          
+          # Check if service is exempt
+          not is_exempt(service)
+          
+          # Get the port
+          port := service.spec.ports[_]
+          
+          # Check if port is in allowed list
+          not port_allowed(port.port)
+          
+          msg := sprintf("Service %s/%s exposes port %v via LoadBalancer. This port is not in the approved firewall list. Update FIREWALL-REQUIREMENTS.md if this is intentional.", [service.metadata.namespace, service.metadata.name, port.port])
+        }
+
+        violation[{"msg": msg}] {
+          input.review.object.kind == "Service"
+          service := input.review.object
+          
+          # Check NodePort services
+          service.spec.type == "NodePort"
+          
+          # Check if service is exempt
+          not is_exempt(service)
+          
+          # Get the NodePort
+          port := service.spec.ports[_]
+          port.nodePort != null
+          
+          # Check if NodePort is in allowed range
+          not nodeport_in_range(port.nodePort)
+          
+          msg := sprintf("Service %s/%s uses NodePort %v which is outside the allowed range (%v-%v). Ensure firewall rules are updated.", [service.metadata.namespace, service.metadata.name, port.nodePort, input.parameters.allowedNodePortRange.min, input.parameters.allowedNodePortRange.max])
+        }
+
+        # Check if port is in allowed list
+        port_allowed(port) {
+          allowed := input.parameters.allowedPorts[_]
+          port == allowed
+        }
+
+        # Check if NodePort is in allowed range
+        nodeport_in_range(nodeport) {
+          nodeport >= input.parameters.allowedNodePortRange.min
+          nodeport <= input.parameters.allowedNodePortRange.max
+        }
+
+        # Check if service is exempt
+        is_exempt(service) {
+          exempt := input.parameters.exemptServices[_]
+          exempt == sprintf("%s/%s", [service.metadata.namespace, service.metadata.name])
+        }
+

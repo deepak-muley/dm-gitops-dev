@@ -6,4 +6,5 @@ resources:
   - block-loadbalancer.yaml
   - require-ingress-tls.yaml
   - block-host-ports.yaml
+  - validate-external-ports.yaml
 
