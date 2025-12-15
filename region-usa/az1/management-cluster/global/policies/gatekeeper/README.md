@@ -77,42 +77,47 @@ All policies support three enforcement modes:
 
 ## Rollout Strategy
 
-### Current Configuration: Full Assessment Mode
+### Current Configuration: Assessment with Minimal Exclusions
 
 All policies are currently configured with:
 - **`enforcementAction: warn`** - Logs violations without blocking
-- **No namespace exclusions** - All namespaces are evaluated for complete visibility
+- **Minimal exclusions** - Only pure Kubernetes and non-Nutanix Cluster API namespaces are excluded
 
-This allows you to see the **full security posture** of your platform before making decisions about exclusions.
+#### Excluded Namespaces (11)
 
-### Phase 1: Assessment (Week 1-2)
-1. Deploy all constraints (current state)
-2. Run audit: `kubectl get constraints -o wide`
-3. Review all violations across ALL namespaces
-4. Identify which violations are:
-   - **Legitimate issues** to fix
+| Category | Namespaces |
+|----------|------------|
+| **Pure Kubernetes** | `kube-system`, `kube-public`, `kube-node-lease` |
+| **Cluster API Core** | `capi-system`, `capi-kubeadm-bootstrap-system`, `capi-kubeadm-control-plane-system` |
+| **Non-Nutanix CAPI Providers** | `capa-system` (AWS), `capz-system` (Azure), `capg-system` (GCP), `capv-system` (vSphere), `caaph-system` (Add-on Provider) |
+
+#### NOT Excluded (Nutanix/NKP - For Evaluation)
+
+These namespaces are **intentionally evaluated** to assess NKP platform security:
+- `capx-system` - Nutanix CAPX provider
+- `cappp-system` - Nutanix PacketPlayer provider  
+- `caren-system` - Nutanix runtime extensions
+- `kommander`, `kommander-flux` - NKP management plane
+- `cert-manager`, `traefik`, `ntnx-system` - Platform services
+- All customer workload namespaces
+
+### Phase 1: Assessment (Current)
+1. ✅ Deployed all constraints with `warn` mode
+2. Review violations: `kubectl get constraints -o json | jq '.items[] | {name: .metadata.name, violations: .status.totalViolations}'`
+3. Identify which violations are:
+   - **Legitimate issues** to fix (report to Nutanix/platform teams)
    - **Expected exceptions** (system components that need elevated permissions)
 
-### Phase 2: Add Selective Exclusions (Week 3)
-Based on assessment, add `excludedNamespaces` for legitimate exceptions:
+### Phase 2: Tune Policies (After Assessment)
+Based on assessment findings:
+1. Add additional `excludedNamespaces` for legitimate platform exceptions
+2. Update `allowedSubjects` in RBAC policies for necessary ServiceAccounts
+3. Add missing container registries to allowed list
 
-```yaml
-spec:
-  match:
-    excludedNamespaces:
-      - kube-system          # Core K8s components
-      - gatekeeper-system    # Gatekeeper itself
-      - kommander            # NKP management plane
-      - kommander-flux       # Flux GitOps components
-      - cert-manager         # Certificate management
-      - capi-system          # Cluster API
-      - capx-system          # Cluster API providers
-```
-
-### Phase 3: Enforcement (Week 4+)
-1. Change critical policies to `deny`
+### Phase 3: Enforcement
+1. Change critical policies from `warn` to `deny`
 2. Continue monitoring for new violations
-3. Adjust exclusions as platform evolves
+3. Adjust policies as platform evolves
 
 ## Customization
 
