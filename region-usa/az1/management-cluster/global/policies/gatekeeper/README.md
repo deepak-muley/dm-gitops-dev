@@ -94,9 +94,9 @@ All policies are currently configured with:
 #### NOT Excluded (Nutanix/NKP - For Evaluation)
 
 These namespaces are **intentionally evaluated** to assess NKP platform security:
-- `capx-system` - Nutanix CAPX provider
-- `cappp-system` - Nutanix PacketPlayer provider  
-- `caren-system` - Nutanix runtime extensions
+- `capx-system` - Nutanix Cluster API Provider for Nutanix (CAPX)
+- `cappp-system` - Nutanix Cluster API Pre-Provisioned Provider (CAPPP)
+- `caren-system` - Nutanix Cluster API Runtime Extensions (CAREN)
 - `kommander`, `kommander-flux` - NKP management plane
 - `cert-manager`, `traefik`, `ntnx-system` - Platform services
 - All customer workload namespaces
