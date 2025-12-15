@@ -1,0 +1,39 @@
+# Flux Kustomization for Gatekeeper Policies (Management Cluster)
+# References shared policies from _common/policies/gatekeeper
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: gatekeeper-constraint-templates
+  namespace: kommander-flux
+spec:
+  interval: 5m
+  # Path to shared constraint templates
+  path: ./region-usa/az1/_common/policies/gatekeeper/constraint-templates
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: gitops-usa-az1
+    namespace: kommander
+  timeout: 2m
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: gatekeeper-constraints
+  namespace: kommander-flux
+spec:
+  interval: 5m
+  # Path to shared constraints
+  path: ./region-usa/az1/_common/policies/gatekeeper/constraints
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: gitops-usa-az1
+    namespace: kommander
+  # Wait for templates to be ready
+  dependsOn:
+    - name: gatekeeper-constraint-templates
+      namespace: kommander-flux
+  timeout: 2m
+

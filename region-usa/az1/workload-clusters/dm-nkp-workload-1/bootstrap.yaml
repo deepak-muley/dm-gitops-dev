@@ -88,3 +88,39 @@ spec:
     name: dm-nkp-gitops-infra
     namespace: dm-nkp-gitops-workload
   timeout: 5m
+---
+# Stage 3a: Gatekeeper Constraint Templates (shared from _common)
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: gatekeeper-constraint-templates
+  namespace: dm-nkp-gitops-workload
+spec:
+  interval: 5m
+  # References shared constraint templates
+  path: ./region-usa/az1/_common/policies/gatekeeper/constraint-templates
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: dm-nkp-gitops-infra
+    namespace: dm-nkp-gitops-workload
+  timeout: 2m
+---
+# Stage 3b: Gatekeeper Constraints (depends on templates)
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: gatekeeper-constraints
+  namespace: dm-nkp-gitops-workload
+spec:
+  dependsOn:
+    - name: gatekeeper-constraint-templates
+  interval: 5m
+  # References shared constraints
+  path: ./region-usa/az1/_common/policies/gatekeeper/constraints
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: dm-nkp-gitops-infra
+    namespace: dm-nkp-gitops-workload
+  timeout: 2m

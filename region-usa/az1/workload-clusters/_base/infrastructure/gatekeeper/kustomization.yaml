@@ -1,0 +1,14 @@
+# Workload Cluster Gatekeeper Policies
+# References shared policies from _common/policies/gatekeeper
+#
+# Note: This kustomization file enables workload clusters to use the same
+# shared policies as the management cluster without duplication.
+#
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  # Reference the shared constraint templates
+  - ../../../../_common/policies/gatekeeper/constraint-templates/
+  # Reference the shared constraints
+  - ../../../../_common/policies/gatekeeper/constraints/
+
