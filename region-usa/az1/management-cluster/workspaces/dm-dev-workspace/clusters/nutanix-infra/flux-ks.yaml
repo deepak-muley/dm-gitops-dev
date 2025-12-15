@@ -9,7 +9,9 @@ spec:
     # Wait for sealed-secrets to create credential secrets before cluster creation
     - name: clusterops-sealed-secrets
   interval: 5s
-  path: ./region-usa/az1/management-cluster/workspaces/dm-dev-workspace/clusters/nutanix-infra
+  # Points to parent clusters/ directory which includes all cluster providers
+  # (nutanix-infra, kubemark-infra, etc.)
+  path: ./region-usa/az1/management-cluster/workspaces/dm-dev-workspace/clusters
   prune: true
   sourceRef:
     kind: GitRepository
