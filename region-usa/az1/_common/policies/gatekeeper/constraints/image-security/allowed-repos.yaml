@@ -27,6 +27,7 @@ spec:
       - capv-system
       - caaph-system
       - capk-system
+      - capd-system
   parameters:
     repos:
       # =========================================

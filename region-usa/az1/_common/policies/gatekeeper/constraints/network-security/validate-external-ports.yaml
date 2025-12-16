@@ -32,6 +32,7 @@ spec:
       - kube-system
       - kube-public
       - kube-node-lease
+      - capd-system
   parameters:
     # Approved external ports for LoadBalancer services
     # These should match your firewall rules

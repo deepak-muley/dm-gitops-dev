@@ -27,6 +27,7 @@ spec:
       - capv-system
       - caaph-system
       - capk-system
+      - capd-system
   parameters:
     # Allow specific host ports if needed (empty by default)
     allowedPorts: []
