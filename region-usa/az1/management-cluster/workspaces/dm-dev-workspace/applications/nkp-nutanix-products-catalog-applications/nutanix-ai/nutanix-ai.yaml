@@ -18,4 +18,4 @@ spec:
           - dm-nkp-workload-1
           - dm-nkp-workload-2
   configOverrides:
-    name: nutanix-ai-2.5.0-config-overrides
+    name: nutanix-ai-config-overrides

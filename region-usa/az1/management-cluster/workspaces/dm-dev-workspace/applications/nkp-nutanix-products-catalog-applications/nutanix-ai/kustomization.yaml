@@ -1,7 +1,7 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-- nutanix-ai-2.5.0.yaml
-- nutanix-ai-2.5.0-config-overrides.yaml
+- nutanix-ai.yaml
+- nutanix-ai-config-overrides.yaml
 - nutanix-ai-image-pull-sealed-secret.yaml
 
