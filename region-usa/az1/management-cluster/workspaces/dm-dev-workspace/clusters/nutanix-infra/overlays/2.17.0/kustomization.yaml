@@ -7,5 +7,26 @@ resources:
   # Sealed secrets are now applied via separate clusterops-sealed-secrets kustomization
 
 patches:
-  - path: dm-nkp-workload-1-patch.yaml
-  - path: dm-nkp-workload-2-patch.yaml
+  # JSON patches for dm-nkp-workload-1
+  - target:
+      kind: Cluster
+      name: dm-nkp-workload-1
+    patch: |-
+      - op: replace
+        path: /spec/topology/class
+        value: nkp-nutanix-v2.17.0-rc.4
+      - op: add
+        path: /spec/topology/workers/machineDeployments/0/replicas
+        value: 3
+
+  # JSON patches for dm-nkp-workload-2
+  - target:
+      kind: Cluster
+      name: dm-nkp-workload-2
+    patch: |-
+      - op: replace
+        path: /spec/topology/class
+        value: nkp-nutanix-v2.17.0-rc.4
+      - op: add
+        path: /spec/topology/workers/machineDeployments/0/replicas
+        value: 3
