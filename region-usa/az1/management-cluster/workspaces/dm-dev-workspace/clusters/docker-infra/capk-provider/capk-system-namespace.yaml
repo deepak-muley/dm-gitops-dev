@@ -1,0 +1,12 @@
+---
+# Namespace for Cluster API Provider Kubemark (CAPK)
+# This namespace is created by the CAPK controller, but we define it here
+# to ensure it exists before applying hollow machine resources
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: capk-system
+  labels:
+    cluster.x-k8s.io/provider: infrastructure-kubemark
+    control-plane: controller-manager
+

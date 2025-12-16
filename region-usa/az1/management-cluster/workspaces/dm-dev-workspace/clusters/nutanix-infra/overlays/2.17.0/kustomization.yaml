@@ -3,8 +3,7 @@ kind: Kustomization
 
 resources:
   - ../../bases
-  - ../../kubemark-hollow-machines
-  # Sealed secrets are now applied via separate clusterops-sealed-secrets kustomization
+  # Kubemark hollow machines moved to docker-infra for CAPD cluster testing
 
 patches:
   # JSON patches for dm-nkp-workload-1
@@ -18,6 +17,10 @@ patches:
       - op: add
         path: /spec/topology/workers/machineDeployments/0/replicas
         value: 3
+      - op: remove
+        path: /spec/topology/workers/machineDeployments/0/metadata/annotations/cluster.x-k8s.io~1cluster-api-autoscaler-node-group-max-size
+      - op: remove
+        path: /spec/topology/workers/machineDeployments/0/metadata/annotations/cluster.x-k8s.io~1cluster-api-autoscaler-node-group-min-size
 
   # JSON patches for dm-nkp-workload-2
   - target:
@@ -30,3 +33,7 @@ patches:
       - op: add
         path: /spec/topology/workers/machineDeployments/0/replicas
         value: 3
+      - op: remove
+        path: /spec/topology/workers/machineDeployments/0/metadata/annotations/cluster.x-k8s.io~1cluster-api-autoscaler-node-group-max-size
+      - op: remove
+        path: /spec/topology/workers/machineDeployments/0/metadata/annotations/cluster.x-k8s.io~1cluster-api-autoscaler-node-group-min-size

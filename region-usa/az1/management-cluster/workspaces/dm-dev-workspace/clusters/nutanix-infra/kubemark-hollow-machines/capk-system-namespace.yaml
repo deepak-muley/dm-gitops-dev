@@ -1,8 +1,0 @@
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: capk-system
-  labels:
-    cluster.x-k8s.io/provider: infrastructure-kubemark
-    control-plane: controller-manager
-

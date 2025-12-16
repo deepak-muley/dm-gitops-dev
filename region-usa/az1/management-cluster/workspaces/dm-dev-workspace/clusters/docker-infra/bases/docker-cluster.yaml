@@ -1,0 +1,12 @@
+---
+# DockerCluster - Infrastructure configuration for Docker provider
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+kind: DockerCluster
+metadata:
+  name: dm-capd-workload-1
+  namespace: dm-dev-workspace
+spec:
+  # DockerCluster has minimal configuration
+  # Load balancer is automatically configured by CAPD
+  {}
+
