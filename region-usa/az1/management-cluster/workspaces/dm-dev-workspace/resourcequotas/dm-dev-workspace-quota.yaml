@@ -1,3 +1,7 @@
+# STATUS: DISABLED - Not included in kustomization.yaml
+# REASON: Blocks Kubemark hollow-node pods that don't specify resource limits
+# TO RE-ENABLE: Add this file back to kustomization.yaml resources list
+# ALTERNATIVE: Create a LimitRange first to provide default limits for pods
 apiVersion: v1
 kind: ResourceQuota
 metadata:

@@ -43,6 +43,13 @@ CAPK_MANIFESTS_DIR="${REPO_ROOT}/region-usa/az1/management-cluster/workspaces/dm
 CAPK_VERSION="v0.10.0"
 CAPK_GITHUB_URL="https://github.com/kubernetes-sigs/cluster-api-provider-kubemark/releases/download/${CAPK_VERSION}/infrastructure-components.yaml"
 
+# CAPK Controller Resource Limits
+# The upstream defaults (30Mi limit) are too low and cause OOMKilled errors
+CAPK_MEMORY_REQUEST="128Mi"
+CAPK_MEMORY_LIMIT="256Mi"
+CAPK_CPU_REQUEST="100m"
+CAPK_CPU_LIMIT="200m"
+
 # Print header
 print_header() {
     echo -e "\n${CYAN}════════════════════════════════════════════════════════════════${NC}"
@@ -85,6 +92,7 @@ ${BOLD}ARGUMENTS:${NC}
 ${BOLD}OPTIONS:${NC}
     --direct              Download and apply CAPK directly (bypasses clusterctl)
     --generate-manifests  Download CAPK manifests for GitOps (doesn't install)
+    --patch-resources     Patch existing CAPK controller with proper memory limits
     --status              Check CAPK installation status
     --help                Show this help message
 
@@ -98,6 +106,9 @@ ${BOLD}EXAMPLES:${NC}
 
     # Check CAPK status
     ./scripts/bootstrap-capk.sh --status mgmt
+
+    # Fix OOMKilled issues on existing installation
+    ./scripts/bootstrap-capk.sh --patch-resources mgmt
 
     # Download manifests for GitOps deployment
     ./scripts/bootstrap-capk.sh --generate-manifests
@@ -190,6 +201,25 @@ check_status() {
         echo -e "${BOLD}Pods in capk-system:${NC}"
         kubectl --kubeconfig="$kubeconfig" get pods -n capk-system 2>/dev/null || echo "  No pods found"
 
+        # Show controller resource limits (important for OOMKilled debugging)
+        echo ""
+        echo -e "${BOLD}Controller Resource Limits:${NC}"
+        local resources
+        resources=$(kubectl --kubeconfig="$kubeconfig" get deployment capk-controller-manager -n capk-system \
+            -o jsonpath='{.spec.template.spec.containers[?(@.name=="manager")].resources}' 2>/dev/null)
+        if [[ -n "$resources" ]]; then
+            local mem_req mem_lim cpu_req cpu_lim
+            mem_req=$(echo "$resources" | grep -oP '"memory":"[^"]*"' | head -1 | cut -d'"' -f4)
+            mem_lim=$(echo "$resources" | grep -oP '"memory":"[^"]*"' | tail -1 | cut -d'"' -f4)
+            echo "  Memory: request=${mem_req:-unknown}, limit=${mem_lim:-unknown}"
+            if [[ "$mem_lim" == "30Mi" ]]; then
+                warn "  Memory limit is 30Mi (upstream default) - may cause OOMKilled!"
+                info "  Run: ./scripts/bootstrap-capk.sh --patch-resources to fix"
+            fi
+        else
+            echo "  Could not retrieve resource limits"
+        fi
+
         echo ""
         echo -e "${BOLD}CAPK Provider:${NC}"
         kubectl --kubeconfig="$kubeconfig" get providers -A 2>/dev/null | grep -i kubemark || echo "  CAPK provider not found in providers list"
@@ -235,6 +265,41 @@ download_capk_components() {
 
     error "Failed to download CAPK components"
     return 1
+}
+
+# Patch CAPK controller resources to prevent OOMKilled errors
+# The upstream default (30Mi memory limit) is too low for the controller
+patch_capk_resources() {
+    local kubeconfig="$1"
+
+    info "Patching CAPK controller resources (upstream defaults cause OOMKilled)..."
+
+    # Wait for deployment to exist
+    local retries=0
+    while ! kubectl --kubeconfig="$kubeconfig" get deployment capk-controller-manager -n capk-system &> /dev/null; do
+        if [[ $retries -ge 30 ]]; then
+            warn "Timeout waiting for capk-controller-manager deployment"
+            return 1
+        fi
+        sleep 1
+        ((retries++))
+    done
+
+    # Patch the manager container (index 1) with proper resource limits
+    if kubectl --kubeconfig="$kubeconfig" patch deployment capk-controller-manager -n capk-system --type='json' -p="[
+        {\"op\": \"replace\", \"path\": \"/spec/template/spec/containers/1/resources/requests/memory\", \"value\": \"${CAPK_MEMORY_REQUEST}\"},
+        {\"op\": \"replace\", \"path\": \"/spec/template/spec/containers/1/resources/limits/memory\", \"value\": \"${CAPK_MEMORY_LIMIT}\"},
+        {\"op\": \"replace\", \"path\": \"/spec/template/spec/containers/1/resources/requests/cpu\", \"value\": \"${CAPK_CPU_REQUEST}\"},
+        {\"op\": \"replace\", \"path\": \"/spec/template/spec/containers/1/resources/limits/cpu\", \"value\": \"${CAPK_CPU_LIMIT}\"}
+    ]" &> /dev/null; then
+        success "Patched CAPK controller: memory=${CAPK_MEMORY_REQUEST}/${CAPK_MEMORY_LIMIT}, cpu=${CAPK_CPU_REQUEST}/${CAPK_CPU_LIMIT}"
+        return 0
+    else
+        warn "Failed to patch CAPK controller resources - may need manual intervention"
+        warn "Run: kubectl patch deployment capk-controller-manager -n capk-system --type='json' \\"
+        warn "  -p='[{\"op\":\"replace\",\"path\":\"/spec/template/spec/containers/1/resources/limits/memory\",\"value\":\"256Mi\"}]'"
+        return 1
+    fi
 }
 
 # Generate manifests for GitOps
@@ -357,6 +422,11 @@ install_capk() {
 
     echo ""
 
+    # Patch controller resources to prevent OOMKilled errors
+    patch_capk_resources "$kubeconfig"
+
+    echo ""
+
     # Verify installation
     info "Verifying installation..."
     sleep 5  # Wait for pods to start
@@ -404,6 +474,10 @@ main() {
                 action="generate"
                 shift
                 ;;
+            --patch-resources)
+                action="patch"
+                shift
+                ;;
             --direct)
                 direct="true"
                 shift
@@ -415,16 +489,16 @@ main() {
         esac
     done
 
-    # Check prerequisites (clusterctl optional for direct install)
-    if [[ "$direct" != "true" && "$action" != "generate" ]]; then
+    # Check prerequisites (clusterctl optional for direct install, patch, and generate)
+    if [[ "$direct" != "true" && "$action" != "generate" && "$action" != "patch" ]]; then
         check_prerequisites
     else
-        # Only check kubectl for direct/generate
+        # Only check kubectl for direct/generate/patch
         if ! command -v kubectl &> /dev/null; then
             error "kubectl not found. Install with: brew install kubectl"
             exit 1
         fi
-        if ! command -v curl &> /dev/null; then
+        if [[ "$action" != "patch" ]] && ! command -v curl &> /dev/null; then
             error "curl not found"
             exit 1
         fi
@@ -448,6 +522,15 @@ main() {
             ;;
         generate)
             generate_manifests
+            ;;
+        patch)
+            print_header "PATCHING CAPK CONTROLLER RESOURCES"
+            if patch_capk_resources "$kubeconfig"; then
+                echo ""
+                info "Waiting for new pod to be ready..."
+                sleep 10
+                check_status "$kubeconfig"
+            fi
             ;;
         install)
             install_capk "$kubeconfig" "$direct"

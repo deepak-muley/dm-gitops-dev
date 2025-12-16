@@ -1,5 +1,7 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-resources:
-  - dm-dev-workspace-quota.yaml
+resources: []
+  # Disabled: ResourceQuota blocks Kubemark hollow-node pods that don't have resource limits
+  # Re-enable when Kubemark supports resource specs or add a LimitRange first
+  # - dm-dev-workspace-quota.yaml
 
