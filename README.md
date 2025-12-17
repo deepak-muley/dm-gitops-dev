@@ -92,16 +92,21 @@ kubectl apply -f https://raw.githubusercontent.com/deepak-muley/dm-nkp-gitops-in
 │       │           │   ├── platform-applications/
 │       │           │   └── nkp-nutanix-products-catalog-applications/
 │       │           ├── clusters/                   # CAPI workload cluster definitions
-│       │           │   ├── nutanix-infra/         # Nutanix CAPI clusters
-│       │           │   │   ├── bases/
-│       │           │   │   ├── overlays/
-│       │           │   │   └── sealed-secrets/
+│       │           │   ├── flux-ks.yaml           # Unified Flux Kustomization for all clusters
+│       │           │   ├── kustomization.yaml     # Includes nutanix-infra and docker-infra
+│       │           │   ├── nutanix-infra/         # Nutanix CAPI clusters ✅ Active
+│       │           │   │   ├── bases/             # Base cluster definitions
+│       │           │   │   ├── overlays/          # Version-specific JSON patches
+│       │           │   │   └── sealed-secrets/    # Encrypted credentials
+│       │           │   ├── docker-infra/          # CAPD clusters + Kubemark ✅ Active
+│       │           │   │   ├── bases/             # CAPD cluster (control-plane, workers)
+│       │           │   │   ├── capk-provider/     # Kubemark provider namespace
+│       │           │   │   └── kubemark-hollow-machines/  # Hollow nodes for scale testing
 │       │           │   ├── eks-infra/             # AWS EKS clusters (placeholder)
 │       │           │   ├── aks-infra/             # Azure AKS clusters (placeholder)
 │       │           │   ├── gke-infra/             # GCP GKE clusters (placeholder)
 │       │           │   ├── eks-a-infra/           # AWS EKS Anywhere clusters (placeholder)
-│       │           │   ├── openshift-infra/       # OpenShift clusters (placeholder)
-│       │           │   └── docker-infra/          # Docker/Kind clusters (placeholder)
+│       │           │   └── openshift-infra/       # OpenShift clusters (placeholder)
 │       │           ├── projects/
 │       │           │   └── dm-dev-project/
 │       │           ├── rbac/
@@ -245,16 +250,128 @@ Level 2 (Depends on project-definitions):
 5. Update the respective `kustomization.yaml` files
 6. Create workload cluster GitOps folder under `workload-clusters/<cluster-name>/`
 
+## Kustomize Patching Strategy
+
+### JSON Patches (RFC 6902) for Cluster Overlays
+
+For version-specific cluster overlays, we use **JSON patches** instead of strategic merge patches.
+This prevents base fields (like `imageRegistries`, `dns`, `users`) from being overwritten.
+
+```yaml
+# overlays/2.17.0/kustomization.yaml
+patches:
+  - target:
+      kind: Cluster
+      name: dm-nkp-workload-1
+    patch: |-
+      - op: replace
+        path: /spec/topology/class
+        value: nkp-nutanix-v2.17.0-rc.4
+      - op: add
+        path: /spec/topology/workers/machineDeployments/0/replicas
+        value: 3
+      - op: remove
+        path: /spec/topology/workers/machineDeployments/0/metadata/annotations/cluster.x-k8s.io~1cluster-api-autoscaler-node-group-max-size
+```
+
+**Why JSON patches?**
+- Strategic merge patches replace entire nested objects
+- JSON patches surgically modify specific fields
+- Base fields like `imageRegistries` remain intact
+
+## CAPD Clusters (Docker-based)
+
+### Overview
+
+The `docker-infra` directory contains CAPD (Cluster API Docker) cluster configurations:
+- **dm-capd-workload-1**: 1 control plane + 3 CAPD workers + 10 Kubemark hollow nodes
+
+### Prerequisites
+
+CAPD requires Docker on management cluster nodes. For NKP clusters using containerd:
+1. Use a local kind cluster as management cluster, OR
+2. Use the configuration as a template for Docker-enabled environments
+
+### Bootstrap Scripts
+
+```bash
+# Install CAPD provider
+./scripts/bootstrap-capd.sh mgmt
+
+# Install CAPK provider (for hollow nodes)
+./scripts/bootstrap-capk.sh mgmt
+
+# Check status
+./scripts/bootstrap-capd.sh --status mgmt
+./scripts/bootstrap-capk.sh --status mgmt
+```
+
+### Generate CAPD Cluster YAML
+
+```bash
+clusterctl generate cluster test \
+  --infrastructure docker \
+  --kubernetes-version v1.31.0 \
+  --control-plane-machine-count 1 \
+  --worker-machine-count 3 \
+  > test-capd-cluster.yaml
+```
+
+## Gatekeeper Security Policies
+
+### Policy Categories
+
+| Category | Purpose |
+|----------|---------|
+| `image-security` | Container registry restrictions, image digest requirements |
+| `network-security` | NodePort/LoadBalancer restrictions, port validation |
+| `pod-security` | Privileged containers, host namespaces, capabilities |
+| `rbac` | ServiceAccount tokens, wildcard RBAC, cluster-admin |
+| `resource-management` | Resource limits, probes, labels |
+
+### Excluded Namespaces
+
+System namespaces are excluded from policies:
+- `kube-system`, `kube-public`, `kube-node-lease`
+- CAPI namespaces: `capi-system`, `capa-system`, `capz-system`, `capg-system`, `capv-system`, `caaph-system`
+- Provider namespaces: `capk-system`, `capd-system`
+
+### Namespace Targeting Options
+
+```yaml
+# Option 1: Exclude specific namespaces (current - secure by default)
+excludedNamespaces:
+  - kube-system
+  - capd-system
+
+# Option 2: Include only specific namespaces (allowlist)
+namespaces:
+  - production
+  - staging
+
+# Option 3: Label-based (best for large deployments)
+namespaceSelector:
+  matchLabels:
+    policy.gatekeeper.sh/enforce: "true"
+```
+
 ## Currently Active Configuration
 
 ### USA Region - AZ1
 
 | Resource | Name | Details |
 |----------|------|---------|
-| Management Cluster | dm-nkp-mgmt-1 | NKP v2.17.0-rc.1 |
+| Management Cluster | dm-nkp-mgmt-1 | NKP v2.17.0-rc.4 |
 | Workspace | dm-dev-workspace | Development workspace |
-| Workload Clusters | dm-nkp-workload-1, dm-nkp-workload-2 | 1 CP + 3 workers each |
 | Project | dm-dev-project | Development project |
+
+### Workload Clusters
+
+| Cluster | Provider | Control Plane | Workers | Status |
+|---------|----------|---------------|---------|--------|
+| dm-nkp-workload-1 | Nutanix | 1 | 3 | ✅ Provisioned |
+| dm-nkp-workload-2 | Nutanix | 1 | 3 | ✅ Provisioned |
+| dm-capd-workload-1 | Docker (CAPD) | 1 | 3 + 10 hollow | ⚠️ Requires Docker |
 
 ### Platform Applications (Management Cluster)
 
@@ -311,4 +428,30 @@ flux reconcile kustomization infrastructure -n dm-nkp-gitops-workload
 ```bash
 kubectl logs -n kommander-flux deploy/source-controller
 kubectl logs -n kommander-flux deploy/kustomize-controller
+```
+
+## Scripts
+
+| Script | Purpose |
+|--------|---------|
+| `scripts/bootstrap-capd.sh` | Install CAPD provider on management cluster |
+| `scripts/bootstrap-capk.sh` | Install CAPK (Kubemark) provider for hollow nodes |
+| `scripts/check-violations.sh` | Check Gatekeeper policy violations |
+| `scripts/migrate-to-new-structure.sh` | Migration helper for repo restructuring |
+
+### Usage Examples
+
+```bash
+# Install CAPD provider
+./scripts/bootstrap-capd.sh mgmt
+./scripts/bootstrap-capd.sh --direct mgmt  # Direct download (bypasses clusterctl)
+./scripts/bootstrap-capd.sh --status mgmt  # Check status
+
+# Install CAPK provider
+./scripts/bootstrap-capk.sh mgmt
+./scripts/bootstrap-capk.sh --patch-resources mgmt  # Fix OOMKilled issues
+./scripts/bootstrap-capk.sh --generate-manifests    # Generate for GitOps
+
+# Check policy violations
+./scripts/check-violations.sh
 ```
