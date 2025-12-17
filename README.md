@@ -71,6 +71,8 @@ kubectl apply -f https://raw.githubusercontent.com/deepak-muley/dm-nkp-gitops-in
 ```
 .
 ├── README.md
+├── docs/
+│   └── DEBUGGING-GITOPS.md                   # 📖 Comprehensive GitOps debugging guide
 │
 ├── region-usa/                                     # 🇺🇸 USA Region
 │   └── az1/                                        # Availability Zone 1 ✅ Active
@@ -171,22 +173,104 @@ metadata:
 
 ## Flux Kustomization Dependencies (Management Cluster)
 
+### Dependency Graph
+
 ```
-Level 0 (No dependencies):
-  ├── clusterops-global
-  └── clusterops-workspaces
+                                    ┌─────────────────────────────────────┐
+                                    │           Level 0 (Root)            │
+                                    │         No dependencies             │
+                                    └─────────────────────────────────────┘
+                                                     │
+                    ┌────────────────────────────────┼────────────────────────────────┐
+                    │                                │                                │
+                    ▼                                ▼                                ▼
+         ┌──────────────────┐            ┌──────────────────┐            ┌──────────────────────────────┐
+         │ clusterops-global│            │clusterops-       │            │clusterops-sealed-secrets-    │
+         │                  │            │workspaces        │            │controller                    │
+         └──────────────────┘            └────────┬─────────┘            └──────────────┬───────────────┘
+                                                  │                                     │
+            ┌─────────────────┬───────────────────┼───────────────────┬─────────────────┤
+            │                 │                   │                   │                 │
+            ▼                 ▼                   ▼                   ▼                 ▼
+   ┌────────────────┐ ┌────────────────┐ ┌────────────────┐ ┌────────────────┐ ┌────────────────────────┐
+   │clusterops-     │ │clusterops-     │ │clusterops-     │ │clusterops-     │ │clusterops-sealed-      │
+   │workspace-rbac  │ │workspace-      │ │workspace-      │ │project-        │ │secrets                 │
+   │                │ │resourcequotas  │ │application-    │ │definitions     │ │                        │
+   │                │ │                │ │catalogs        │ │                │ │(depends on: workspaces │
+   │                │ │                │ │                │ │                │ │+ sealed-secrets-ctrl)  │
+   └────────────────┘ └────────────────┘ └────────────────┘ └───────┬────────┘ └───────────┬────────────┘
+                                                                    │                      │
+                                                                    │          ┌───────────┘
+                                                                    │          │
+                                                                    ▼          ▼
+                                                           ┌─────────────────────────┐
+                                                           │   clusterops-clusters   │
+                                                           │                         │
+                                                           │(depends on: workspaces  │
+                                                           │+ sealed-secrets)        │
+                                                           └────────────┬────────────┘
+                                                                        │
+                                                                        ▼
+                                                           ┌─────────────────────────┐
+                                                           │clusterops-workspace-    │
+                                                           │applications             │
+                                                           │                         │
+                                                           │(depends on: workspaces  │
+                                                           │+ clusters)              │
+                                                           └────────────┬────────────┘
+                                                                        │
+                                                                        │
+                          ┌─────────────────────────────────────────────┘
+                          │
+                          ▼
+             ┌─────────────────────────┐
+             │clusterops-project-      │
+             │applications             │
+             │                         │
+             │(depends on: project-    │
+             │definitions + workspace- │
+             │applications)            │
+             └─────────────────────────┘
+```
 
-Level 1 (Depends on workspaces):
-  ├── clusterops-workspace-applications
-  ├── clusterops-workspace-rbac
-  ├── clusterops-workspace-networkpolicies
-  ├── clusterops-workspace-resourcequotas
-  ├── clusterops-clusters
-  ├── clusterops-sealed-secrets
-  └── clusterops-project-definitions
+### Dependency Table
 
-Level 2 (Depends on project-definitions):
-  └── clusterops-project-applications
+| Kustomization | Depends On | What It Deploys |
+|---------------|------------|-----------------|
+| `clusterops-global` | - | VirtualGroups, global policies |
+| `clusterops-workspaces` | - | Workspace namespace definitions |
+| `clusterops-sealed-secrets-controller` | - | Sealed Secrets controller in `sealed-secrets-system` |
+| `clusterops-workspace-rbac` | workspaces | RoleBindings for workspace access |
+| `clusterops-workspace-resourcequotas` | workspaces | ResourceQuotas per workspace |
+| `clusterops-workspace-application-catalogs` | workspaces | Custom application catalogs |
+| `clusterops-project-definitions` | workspaces | Project namespace definitions |
+| `clusterops-sealed-secrets` | workspaces, sealed-secrets-controller | SealedSecrets for cluster credentials |
+| `clusterops-clusters` | workspaces, sealed-secrets | CAPI Cluster CRs (Nutanix, CAPD, etc.) |
+| `clusterops-workspace-applications` | workspaces, clusters | Platform applications (via AppDeployments) |
+| `clusterops-project-applications` | project-definitions, workspace-applications | Project-scoped applications |
+
+### Reconciliation Order
+
+When bootstrapping a fresh management cluster:
+
+1. **Phase 1** (parallel): `global`, `workspaces`, `sealed-secrets-controller`
+2. **Phase 2** (parallel): `workspace-rbac`, `workspace-resourcequotas`, `workspace-application-catalogs`, `project-definitions`, `sealed-secrets`
+3. **Phase 3**: `clusters` (waits for secrets to be decrypted)
+4. **Phase 4**: `workspace-applications` (waits for clusters to exist)
+5. **Phase 5**: `project-applications` (waits for workspace apps)
+
+### Troubleshooting Dependencies
+
+```bash
+# Check which kustomizations are blocked
+kubectl get kustomization -n dm-nkp-gitops-infra -o wide
+
+# Check specific dependency status
+kubectl get kustomization clusterops-clusters -n dm-nkp-gitops-infra \
+  -o jsonpath='{.status.conditions[?(@.type=="Ready")].message}'
+
+# Force reconciliation of a blocked kustomization
+flux reconcile kustomization clusterops-clusters -n dm-nkp-gitops-infra
 ```
 
 ## Adding a New Region
@@ -388,6 +472,8 @@ namespaceSelector:
 
 ## Troubleshooting
 
+> **📖 For comprehensive debugging commands, see [docs/DEBUGGING-GITOPS.md](docs/DEBUGGING-GITOPS.md)**
+
 ### Check Flux Status (Management Cluster)
 
 ```bash
@@ -430,7 +516,9 @@ kubectl logs -n kommander-flux deploy/source-controller
 kubectl logs -n kommander-flux deploy/kustomize-controller
 ```
 
-## Scripts
+## Scripts & Documentation
+
+### Scripts
 
 | Script | Purpose |
 |--------|---------|
@@ -438,6 +526,12 @@ kubectl logs -n kommander-flux deploy/kustomize-controller
 | `scripts/bootstrap-capk.sh` | Install CAPK (Kubemark) provider for hollow nodes |
 | `scripts/check-violations.sh` | Check Gatekeeper policy violations |
 | `scripts/migrate-to-new-structure.sh` | Migration helper for repo restructuring |
+
+### Documentation
+
+| Document | Purpose |
+|----------|---------|
+| `docs/DEBUGGING-GITOPS.md` | Comprehensive GitOps debugging guide with commands for troubleshooting Flux, Kustomize, Sealed Secrets, and CAPI issues |
 
 ### Usage Examples
 
