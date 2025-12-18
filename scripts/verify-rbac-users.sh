@@ -159,16 +159,36 @@ WS_ADMIN_KUBECONFIG="${KUBECONFIG_DIR}/dm-dev-workspace-admin.kubeconfig"
 
 if verify_user_exists "$WS_ADMIN_KUBECONFIG" "dm-dev-workspace-admin"; then
 
-    print_subheader "Workspace Access (dm-dev-workspace)"
+    print_subheader "Workspace Access (dm-dev-workspace) - SHOULD HAVE"
     test_permission "$WS_ADMIN_KUBECONFIG" "Get workspaceroles (dm-dev-workspace)" "yes" "workspaceroles.workspaces.kommander.mesosphere.io" "get" "dm-dev-workspace"
     test_permission "$WS_ADMIN_KUBECONFIG" "Get projects (dm-dev-workspace)" "yes" "projects.workspaces.kommander.mesosphere.io" "get" "dm-dev-workspace"
     test_permission "$WS_ADMIN_KUBECONFIG" "Get pods (dm-dev-workspace)" "yes" "pods" "get" "dm-dev-workspace"
+    test_permission "$WS_ADMIN_KUBECONFIG" "Create configmaps (dm-dev-workspace)" "yes" "configmaps" "create" "dm-dev-workspace"
+    test_permission "$WS_ADMIN_KUBECONFIG" "Get secrets (dm-dev-workspace)" "yes" "secrets" "get" "dm-dev-workspace"
 
-    print_subheader "Should NOT Have Access To"
+    print_subheader "Cluster-Level Access - SHOULD NOT HAVE"
     test_permission "$WS_ADMIN_KUBECONFIG" "Get nodes (cluster-level)" "no" "nodes" "get"
-    test_permission "$WS_ADMIN_KUBECONFIG" "Get secrets (kube-system)" "no" "secrets" "get" "kube-system"
-    test_permission "$WS_ADMIN_KUBECONFIG" "Get workspaceroles (kommander)" "no" "workspaceroles.workspaces.kommander.mesosphere.io" "get" "kommander"
+    test_permission "$WS_ADMIN_KUBECONFIG" "Get PVs (cluster-level)" "no" "persistentvolumes" "get"
+    test_permission "$WS_ADMIN_KUBECONFIG" "Get namespaces (all)" "no" "namespaces" "get"
+    test_permission "$WS_ADMIN_KUBECONFIG" "Create namespaces" "no" "namespaces" "create"
+
+    print_subheader "Other Workspaces - SHOULD NOT HAVE"
+    test_permission "$WS_ADMIN_KUBECONFIG" "List workspaces (global)" "no" "workspaces.workspaces.kommander.mesosphere.io" "list"
     test_permission "$WS_ADMIN_KUBECONFIG" "Create workspaces (global)" "no" "workspaces.workspaces.kommander.mesosphere.io" "create"
+    test_permission "$WS_ADMIN_KUBECONFIG" "Delete workspaces (global)" "no" "workspaces.workspaces.kommander.mesosphere.io" "delete"
+    test_permission "$WS_ADMIN_KUBECONFIG" "Get workspaceroles (kommander)" "no" "workspaceroles.workspaces.kommander.mesosphere.io" "get" "kommander"
+    test_permission "$WS_ADMIN_KUBECONFIG" "Get pods (kommander)" "no" "pods" "get" "kommander"
+    test_permission "$WS_ADMIN_KUBECONFIG" "Get pods (kommander-default-ws)" "no" "pods" "get" "kommander-default-workspace"
+
+    print_subheader "System Namespaces - SHOULD NOT HAVE"
+    test_permission "$WS_ADMIN_KUBECONFIG" "Get secrets (kube-system)" "no" "secrets" "get" "kube-system"
+    test_permission "$WS_ADMIN_KUBECONFIG" "Get pods (kube-system)" "no" "pods" "get" "kube-system"
+    test_permission "$WS_ADMIN_KUBECONFIG" "Get pods (default)" "no" "pods" "get" "default"
+
+    print_subheader "Global Resources - SHOULD NOT HAVE"
+    test_permission "$WS_ADMIN_KUBECONFIG" "Get virtualgroups (global)" "no" "virtualgroups.kommander.mesosphere.io" "get"
+    test_permission "$WS_ADMIN_KUBECONFIG" "Create virtualgroups (global)" "no" "virtualgroups.kommander.mesosphere.io" "create"
+    test_permission "$WS_ADMIN_KUBECONFIG" "Get clusterroles" "no" "clusterroles" "get"
 else
     echo -e "${YELLOW}Skipping workspace admin tests - kubeconfig not found${NC}"
 fi
@@ -181,17 +201,43 @@ PROJ_ADMIN_KUBECONFIG="${KUBECONFIG_DIR}/dm-dev-project-admin.kubeconfig"
 
 if verify_user_exists "$PROJ_ADMIN_KUBECONFIG" "dm-dev-project-admin"; then
 
-    print_subheader "Project Access (dm-dev-project)"
+    print_subheader "Project Access (dm-dev-project) - SHOULD HAVE"
     test_permission "$PROJ_ADMIN_KUBECONFIG" "Get pods (dm-dev-project)" "yes" "pods" "get" "dm-dev-project"
     test_permission "$PROJ_ADMIN_KUBECONFIG" "Get projectroles (dm-dev-project)" "yes" "projectroles.workspaces.kommander.mesosphere.io" "get" "dm-dev-project"
     test_permission "$PROJ_ADMIN_KUBECONFIG" "Create configmaps (dm-dev-project)" "yes" "configmaps" "create" "dm-dev-project"
+    test_permission "$PROJ_ADMIN_KUBECONFIG" "Get secrets (dm-dev-project)" "yes" "secrets" "get" "dm-dev-project"
+    test_permission "$PROJ_ADMIN_KUBECONFIG" "Create deployments (dm-dev-project)" "yes" "deployments" "create" "dm-dev-project"
 
-    print_subheader "Should NOT Have Access To"
+    print_subheader "Cluster-Level Access - SHOULD NOT HAVE"
     test_permission "$PROJ_ADMIN_KUBECONFIG" "Get nodes (cluster-level)" "no" "nodes" "get"
-    test_permission "$PROJ_ADMIN_KUBECONFIG" "Get pods (dm-dev-workspace)" "no" "pods" "get" "dm-dev-workspace"
-    test_permission "$PROJ_ADMIN_KUBECONFIG" "Get pods (default)" "no" "pods" "get" "default"
-    test_permission "$PROJ_ADMIN_KUBECONFIG" "Get workspaceroles (dm-dev-workspace)" "no" "workspaceroles.workspaces.kommander.mesosphere.io" "get" "dm-dev-workspace"
+    test_permission "$PROJ_ADMIN_KUBECONFIG" "Get PVs (cluster-level)" "no" "persistentvolumes" "get"
+    test_permission "$PROJ_ADMIN_KUBECONFIG" "Get namespaces (all)" "no" "namespaces" "get"
+    test_permission "$PROJ_ADMIN_KUBECONFIG" "Create namespaces" "no" "namespaces" "create"
+
+    print_subheader "Workspaces - SHOULD NOT HAVE"
+    test_permission "$PROJ_ADMIN_KUBECONFIG" "List workspaces (global)" "no" "workspaces.workspaces.kommander.mesosphere.io" "list"
     test_permission "$PROJ_ADMIN_KUBECONFIG" "Create workspaces" "no" "workspaces.workspaces.kommander.mesosphere.io" "create"
+    test_permission "$PROJ_ADMIN_KUBECONFIG" "Get workspaceroles (dm-dev-workspace)" "no" "workspaceroles.workspaces.kommander.mesosphere.io" "get" "dm-dev-workspace"
+
+    print_subheader "Parent Workspace (dm-dev-workspace) - SHOULD NOT HAVE"
+    test_permission "$PROJ_ADMIN_KUBECONFIG" "Get pods (dm-dev-workspace)" "no" "pods" "get" "dm-dev-workspace"
+    test_permission "$PROJ_ADMIN_KUBECONFIG" "Get secrets (dm-dev-workspace)" "no" "secrets" "get" "dm-dev-workspace"
+    test_permission "$PROJ_ADMIN_KUBECONFIG" "List projects (dm-dev-workspace)" "no" "projects.workspaces.kommander.mesosphere.io" "list" "dm-dev-workspace"
+    test_permission "$PROJ_ADMIN_KUBECONFIG" "Create projects (dm-dev-workspace)" "no" "projects.workspaces.kommander.mesosphere.io" "create" "dm-dev-workspace"
+
+    print_subheader "Other Workspaces - SHOULD NOT HAVE"
+    test_permission "$PROJ_ADMIN_KUBECONFIG" "Get pods (kommander)" "no" "pods" "get" "kommander"
+    test_permission "$PROJ_ADMIN_KUBECONFIG" "Get pods (kommander-default-ws)" "no" "pods" "get" "kommander-default-workspace"
+
+    print_subheader "System Namespaces - SHOULD NOT HAVE"
+    test_permission "$PROJ_ADMIN_KUBECONFIG" "Get pods (kube-system)" "no" "pods" "get" "kube-system"
+    test_permission "$PROJ_ADMIN_KUBECONFIG" "Get secrets (kube-system)" "no" "secrets" "get" "kube-system"
+    test_permission "$PROJ_ADMIN_KUBECONFIG" "Get pods (default)" "no" "pods" "get" "default"
+
+    print_subheader "Global Resources - SHOULD NOT HAVE"
+    test_permission "$PROJ_ADMIN_KUBECONFIG" "Get virtualgroups (global)" "no" "virtualgroups.kommander.mesosphere.io" "get"
+    test_permission "$PROJ_ADMIN_KUBECONFIG" "Get clusterroles" "no" "clusterroles" "get"
+    test_permission "$PROJ_ADMIN_KUBECONFIG" "Get appdeployments (all)" "no" "appdeployments.apps.kommander.d2iq.io" "get"
 else
     echo -e "${YELLOW}Skipping project admin tests - kubeconfig not found${NC}"
 fi
