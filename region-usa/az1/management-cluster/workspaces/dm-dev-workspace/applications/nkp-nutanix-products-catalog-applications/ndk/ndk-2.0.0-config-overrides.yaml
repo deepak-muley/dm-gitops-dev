@@ -6,4 +6,4 @@ metadata:
 data:
   values.yaml: |
     imageCredentials:
-      name: ndk-image-registry-credentials
+      name: ndk-image-pull-secret
