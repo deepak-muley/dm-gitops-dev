@@ -15,8 +15,11 @@ resources:
   # Workspaces
   - workspaces/flux-ks.yaml
 
+  # kommander-workspace resources (global catalog and mgmt cluster apps)
+  - workspaces/kommander-workspace/application-catalogs/flux-ks.yaml
+  - workspaces/kommander-workspace/applications/flux-ks.yaml
+
   # dm-dev-workspace resources
-  - workspaces/dm-dev-workspace/application-catalogs/flux-ks.yaml
   - workspaces/dm-dev-workspace/applications/flux-ks.yaml
   - workspaces/dm-dev-workspace/clusters/flux-ks.yaml
   - workspaces/dm-dev-workspace/clusters/nutanix-infra/sealed-secrets/flux-ks.yaml
