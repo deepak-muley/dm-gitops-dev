@@ -8,8 +8,8 @@ spec:
     - name: clusterops-workspaces
     # Wait for clusters to be created before deploying workspace applications
     - name: clusterops-clusters
-    # Wait for application catalog to be available in kommander-workspace
-    - name: clusterops-kommander-workspace-application-catalogs
+    # Wait for application catalog to be available in dm-dev-workspace
+    - name: clusterops-dm-dev-workspace-application-catalogs
   interval: 5s
   path: ./region-usa/az1/management-cluster/workspaces/dm-dev-workspace/applications
   prune: true

@@ -1,0 +1,18 @@
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: OCIRepository
+metadata:
+  creationTimestamp: null
+  annotations:
+    nkp.nutanix.com/skip-oci-registry-patches: "true"
+  labels:
+    catalog.nkp.nutanix.com/catalog-source-artifact: "true"
+  name: dm-nkp-gitops-app-catalog-collection
+  namespace: dm-dev-workspace
+spec:
+  interval: 6h0m0s
+  ref:
+    tag: v0.2.0
+  timeout: 1m0s
+  url: oci://ghcr.io/deepak-muley/nkp-custom-apps-catalog/dm-nkp-gitops-app-catalog/collection
+status: {}
+
