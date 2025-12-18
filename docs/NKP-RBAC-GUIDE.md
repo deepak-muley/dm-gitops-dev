@@ -1104,40 +1104,86 @@ Kubeconfig Directory: /Users/deepak.muley/ws/nkp
 ═══════════════════════════════════════════════════════════════
   Authenticated as: dm-dev-workspace-admin
 
-─── Workspace Access (dm-dev-workspace) ───
+─── Workspace Access (dm-dev-workspace) - SHOULD HAVE ───
   ✅ Get workspaceroles (dm-dev-workspace)              (expected: yes, got: yes)
   ✅ Get projects (dm-dev-workspace)                    (expected: yes, got: yes)
   ✅ Get pods (dm-dev-workspace)                        (expected: yes, got: yes)
+  ✅ Create configmaps (dm-dev-workspace)               (expected: yes, got: yes)
+  ✅ Get secrets (dm-dev-workspace)                     (expected: yes, got: yes)
 
-─── Should NOT Have Access To ───
+─── Cluster-Level Access - SHOULD NOT HAVE ───
   ✅ Get nodes (cluster-level)                          (expected: no , got: no )
-  ✅ Get secrets (kube-system)                          (expected: no , got: no )
-  ✅ Get workspaceroles (kommander)                     (expected: no , got: no )
+  ✅ Get PVs (cluster-level)                            (expected: no , got: no )
+  ✅ Get namespaces (all)                               (expected: no , got: no )
+  ✅ Create namespaces                                  (expected: no , got: no )
+
+─── Other Workspaces - SHOULD NOT HAVE ───
+  ✅ List workspaces (global)                           (expected: no , got: no )
   ✅ Create workspaces (global)                         (expected: no , got: no )
+  ✅ Delete workspaces (global)                         (expected: no , got: no )
+  ✅ Get workspaceroles (kommander)                     (expected: no , got: no )
+  ✅ Get pods (kommander)                               (expected: no , got: no )
+  ✅ Get pods (kommander-default-ws)                    (expected: no , got: no )
+
+─── System Namespaces - SHOULD NOT HAVE ───
+  ✅ Get secrets (kube-system)                          (expected: no , got: no )
+  ✅ Get pods (kube-system)                             (expected: no , got: no )
+  ✅ Get pods (default)                                 (expected: no , got: no )
+
+─── Global Resources - SHOULD NOT HAVE ───
+  ✅ Get virtualgroups (global)                         (expected: no , got: no )
+  ✅ Create virtualgroups (global)                      (expected: no , got: no )
+  ✅ Get clusterroles                                   (expected: no , got: no )
 
 ═══════════════════════════════════════════════════════════════
   PROJECT ADMIN: dm-dev-project-admin
 ═══════════════════════════════════════════════════════════════
   Authenticated as: dm-dev-project-admin
 
-─── Project Access (dm-dev-project) ───
+─── Project Access (dm-dev-project) - SHOULD HAVE ───
   ✅ Get pods (dm-dev-project)                          (expected: yes, got: yes)
   ✅ Get projectroles (dm-dev-project)                  (expected: yes, got: yes)
   ✅ Create configmaps (dm-dev-project)                 (expected: yes, got: yes)
+  ✅ Get secrets (dm-dev-project)                       (expected: yes, got: yes)
+  ✅ Create deployments (dm-dev-project)                (expected: yes, got: yes)
 
-─── Should NOT Have Access To ───
+─── Cluster-Level Access - SHOULD NOT HAVE ───
   ✅ Get nodes (cluster-level)                          (expected: no , got: no )
-  ✅ Get pods (dm-dev-workspace)                        (expected: no , got: no )
-  ✅ Get pods (default)                                 (expected: no , got: no )
-  ✅ Get workspaceroles (dm-dev-workspace)              (expected: no , got: no )
+  ✅ Get PVs (cluster-level)                            (expected: no , got: no )
+  ✅ Get namespaces (all)                               (expected: no , got: no )
+  ✅ Create namespaces                                  (expected: no , got: no )
+
+─── Workspaces - SHOULD NOT HAVE ───
+  ✅ List workspaces (global)                           (expected: no , got: no )
   ✅ Create workspaces                                  (expected: no , got: no )
+  ✅ Get workspaceroles (dm-dev-workspace)              (expected: no , got: no )
+
+─── Parent Workspace (dm-dev-workspace) - SHOULD NOT HAVE ───
+  ✅ Get pods (dm-dev-workspace)                        (expected: no , got: no )
+  ✅ Get secrets (dm-dev-workspace)                     (expected: no , got: no )
+  ✅ List projects (dm-dev-workspace)                   (expected: no , got: no )
+  ✅ Create projects (dm-dev-workspace)                 (expected: no , got: no )
+
+─── Other Workspaces - SHOULD NOT HAVE ───
+  ✅ Get pods (kommander)                               (expected: no , got: no )
+  ✅ Get pods (kommander-default-ws)                    (expected: no , got: no )
+
+─── System Namespaces - SHOULD NOT HAVE ───
+  ✅ Get pods (kube-system)                             (expected: no , got: no )
+  ✅ Get secrets (kube-system)                          (expected: no , got: no )
+  ✅ Get pods (default)                                 (expected: no , got: no )
+
+─── Global Resources - SHOULD NOT HAVE ───
+  ✅ Get virtualgroups (global)                         (expected: no , got: no )
+  ✅ Get clusterroles                                   (expected: no , got: no )
+  ✅ Get appdeployments (all)                           (expected: no , got: no )
 
 ═══════════════════════════════════════════════════════════════
   TEST SUMMARY
 ═══════════════════════════════════════════════════════════════
 
-  Total Tests:  27
-  Passed:       27
+  Total Tests:  57
+  Passed:       57
   Failed:       0
 
 ╔═══════════════════════════════════════════════════════════════╗
@@ -1147,11 +1193,27 @@ Kubeconfig Directory: /Users/deepak.muley/ws/nkp
 
 ### Understanding the Test Results
 
-| User | Tests | What's Verified |
-|------|-------|-----------------|
-| **dm-k8s-admin** | 12 tests | Full K8s cluster-admin + NKP kommander-admin access |
-| **dm-dev-workspace-admin** | 7 tests | Access to dm-dev-workspace, denied elsewhere |
-| **dm-dev-project-admin** | 8 tests | Access to dm-dev-project only, denied elsewhere |
+| User | Positive Tests | Negative Tests | Total | What's Verified |
+|------|----------------|----------------|-------|-----------------|
+| **dm-k8s-admin** | 12 | 0 | 12 | Full K8s cluster-admin + NKP kommander-admin access |
+| **dm-dev-workspace-admin** | 5 | 17 | 22 | Access ONLY to dm-dev-workspace, denied everywhere else |
+| **dm-dev-project-admin** | 5 | 18 | 23 | Access ONLY to dm-dev-project, denied everywhere else |
+
+### Negative Tests Coverage
+
+**Workspace Admin cannot:**
+- List/create/delete workspaces globally
+- Access other workspaces (kommander, kommander-default-workspace)
+- Access system namespaces (kube-system, default)
+- Access global resources (virtualgroups, clusterroles, nodes, PVs)
+
+**Project Admin cannot:**
+- List/create workspaces
+- Access parent workspace (dm-dev-workspace) resources
+- List/create other projects
+- Access other workspaces (kommander, etc.)
+- Access system namespaces
+- Access global resources (virtualgroups, clusterroles, appdeployments)
 
 ### Kubeconfig Locations
 
