@@ -52,22 +52,24 @@ test_permission() {
     local resource="$4"
     local verb="${5:-get}"
     local namespace="${6:-}"
-
+    
     TOTAL_TESTS=$((TOTAL_TESTS + 1))
-
+    
     local ns_flag=""
     if [ -n "$namespace" ]; then
         ns_flag="-n $namespace"
     else
         ns_flag="-A"
     fi
-
+    
     local result
-    result=$(kubectl --kubeconfig="$kubeconfig" auth can-i "$verb" "$resource" $ns_flag 2>/dev/null || echo "no")
-
+    result=$(kubectl --kubeconfig="$kubeconfig" auth can-i "$verb" "$resource" $ns_flag 2>/dev/null | head -1 || echo "no")
+    # Normalize result - trim whitespace and take first word
+    result=$(echo "$result" | tr -d '[:space:]' | cut -c1-3)
+    
     local status_icon
     local status_color
-
+    
     if [ "$result" = "$expected" ]; then
         PASSED_TESTS=$((PASSED_TESTS + 1))
         status_icon="✅"
@@ -77,7 +79,7 @@ test_permission() {
         status_icon="❌"
         status_color="${RED}"
     fi
-
+    
     printf "  ${status_color}${status_icon}${NC} %-50s (expected: %-3s, got: %-3s)\n" "$description" "$expected" "$result"
 }
 
