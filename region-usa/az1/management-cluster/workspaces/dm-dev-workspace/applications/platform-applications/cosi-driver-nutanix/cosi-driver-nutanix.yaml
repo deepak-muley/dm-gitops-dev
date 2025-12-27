@@ -1,0 +1,20 @@
+apiVersion: apps.kommander.d2iq.io/v1alpha3
+kind: AppDeployment
+metadata:
+  name: cosi-driver-nutanix
+  namespace: dm-dev-workspace
+  annotations:
+    kustomize.toolkit.fluxcd.io/ssa: merge
+    kustomize.toolkit.fluxcd.io/prune: disabled
+spec:
+  appRef:
+    kind: ClusterApp
+    name: cosi-driver-nutanix-0.6.1
+  clusterSelector:
+    matchExpressions:
+      - key: kommander.d2iq.io/cluster-name
+        operator: In
+        values:
+          - dm-nkp-workload-1
+          - dm-nkp-workload-2
+

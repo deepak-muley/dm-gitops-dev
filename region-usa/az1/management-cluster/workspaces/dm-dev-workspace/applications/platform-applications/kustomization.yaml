@@ -5,6 +5,8 @@ resources:
   - kube-prometheus-stack
   - cloudnative-pg
   - harbor
+  # COSI driver (required for ObjectBucketClaim CRD - needed by project-grafana-loki)
+  - cosi-driver-nutanix
   # NKP Insights (depends on prometheus and cloudnative-pg)
   - nkp-insights
   # DISABLED: rook-ceph
