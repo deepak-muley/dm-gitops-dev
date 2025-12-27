@@ -44,3 +44,6 @@ region-usa/az1/_common/policies/gatekeeper/SECURITY-ROADMAP.md
 **/secrets-local/
 **/*.secret.yaml
 **/*.secret.yml
+
+# Internal documentation (generated files, not for version control)
+docs/internal/

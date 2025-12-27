@@ -11,8 +11,119 @@ Utility scripts for managing the NKP GitOps infrastructure.
 | `bootstrap-sealed-secrets-key-crs.sh` | Deploy sealed-secrets key via ClusterResourceSet | `./scripts/bootstrap-sealed-secrets-key-crs.sh` |
 | `check-cluster-health.sh` | Check health of all NKP clusters | `./scripts/check-cluster-health.sh` |
 | `check-violations.sh` | Check Gatekeeper policy violations | `./scripts/check-violations.sh mgmt` |
-| `list-clusterapps-and-apps.sh` | List all ClusterApp and App CRs grouped by type | `./scripts/list-clusterapps-and-apps.sh` |
+| `get-kubescape-cves.sh` | Get CVEs from kubescape scans with severity filtering | `./scripts/get-kubescape-cves.sh [severity] [cluster]` |
+| `list-clusterapps-and-apps.sh` | List all ClusterApp and App CRs grouped by type | `./scripts/list-clusterapps-and-apps.sh [--generate-block-diagram]` |
 | `migrate-to-new-structure.sh` | Migrate repo structure safely | `./scripts/migrate-to-new-structure.sh` |
+| `pod-security-audit.sh` | Comprehensive pod security testing (escape, hardening, context) | `./scripts/pod-security-audit.sh --namespace <ns> --pod <pod> [options]` |
+| `validate-security-fixes.sh` | Validate if security fixes will break a pod before applying | `./scripts/validate-security-fixes.sh --namespace <ns> --pod <pod> [options]` |
+| `nkp-pentest-suite.sh` | Comprehensive penetration testing suite for NKP clusters | `./scripts/nkp-pentest-suite.sh [--kubeconfig <path>] [--namespace <ns>] [--output <dir>]` |
+| `run-pentest-tools.sh` | Install and run individual penetration testing tools (kubescape, kubeaudit, trivy, etc.) | `./scripts/run-pentest-tools.sh <tool> [--namespace <ns>] [--cluster <name>]` |
+
+---
+
+## validate-security-fixes.sh
+
+Validates if security fixes will break a pod before applying them. This script helps answer the critical question: "Will my pod work after applying security fixes?"
+
+### Why Is This Needed?
+
+Applying security fixes blindly can break applications. This script analyzes:
+- Current security configuration
+- Runtime requirements (what the pod actually uses)
+- Application type and patterns
+- Documentation and annotations
+- Dry-run validation
+
+### Usage
+
+```bash
+# Basic usage
+./scripts/validate-security-fixes.sh --namespace <namespace> --pod <pod-name>
+
+# With kubeconfig
+./scripts/validate-security-fixes.sh \
+  --namespace kube-system \
+  --pod cilium-xxx \
+  --kubeconfig /path/to/kubeconfig
+
+# Export analysis report
+./scripts/validate-security-fixes.sh \
+  --namespace kommander \
+  --pod kommander-appmanagement-xxx \
+  --export analysis-report.txt
+```
+
+### What It Analyzes
+
+1. **Current Security Configuration**
+   - Pod-level: hostNetwork, hostPID, hostIPC, runAsUser
+   - Container-level: privileged, capabilities, readOnlyRootFilesystem
+
+2. **Runtime Requirements**
+   - What user the pod is actually running as
+   - What capabilities are in use
+   - Whether filesystem writes are needed
+
+3. **Documentation and Annotations**
+   - Security-related annotations
+   - Application type detection (CNI, monitoring, etc.)
+   - Pattern recognition for common pod types
+
+4. **Dry-Run Validation**
+   - Tests if fixes are syntactically valid
+   - Validates against Kubernetes API
+
+5. **Recommendations**
+   - Specific guidance based on analysis
+   - Risk assessment for each fix
+   - Testing strategy
+
+### Example Output
+
+```
+═══════════════════════════════════════════════════════════════
+Security Fix Validation Analysis
+═══════════════════════════════════════════════════════════════
+
+1. Current Security Configuration
+   ⚠ hostNetwork: true (required for CNI/network plugins)
+   ✗ Currently running as root (UID: 0)
+   ⚠ Container has effective capabilities
+
+2. Runtime Requirements Analysis
+   → Fix: Set runAsUser to non-root (e.g., 65532)
+   → Risk: HIGH - May break if app requires root privileges
+
+3. Documentation and Annotations
+   ⚠ This appears to be a CNI/network plugin
+   → Recommendation: DO NOT apply strict security fixes
+
+4. Recommendations
+   ⚠ Pod uses hostNetwork
+   → This is a network plugin - hostNetwork is REQUIRED
+   → DO NOT change hostNetwork: false
+```
+
+### Common Patterns Detected
+
+- **CNI/Network Plugins** (cilium, calico, etc.):
+  - Require: hostNetwork, privileged, NET_ADMIN
+  - Recommendation: DO NOT apply strict fixes
+
+- **Monitoring Pods** (node-exporter, prometheus):
+  - May require: hostPID, hostNetwork
+  - Recommendation: Test carefully
+
+- **Application Pods**:
+  - Usually safe to harden
+  - Recommendation: Apply fixes with testing
+
+### See Also
+
+- `docs/SECURITY-FIX-VALIDATION-GUIDE.md` - Comprehensive guide on validating security fixes
+- `pod-security-audit.sh` - Security audit with fix export
+
+---
 
 ---
 
@@ -502,6 +613,9 @@ export KUBECONFIG=/Users/deepak.muley/ws/nkp/dm-nkp-mgmt-1.conf
   ./scripts/list-clusterapps-and-apps.sh --check-deployments --name cert-manager
   ./scripts/list-clusterapps-and-apps.sh --check-deployments --kind ClusterApp
 
+  # Generate block diagram of ClusterApp dependencies
+  ./scripts/list-clusterapps-and-apps.sh --generate-block-diagram
+
   # Combine multiple filters
   ./scripts/list-clusterapps-and-apps.sh --kind App --scope workspace --name kserve
   ./scripts/list-clusterapps-and-apps.sh --kind ClusterApp --type nkp-core-platform --scope workspace
@@ -530,6 +644,7 @@ export KUBECONFIG=/Users/deepak.muley/ws/nkp/dm-nkp-mgmt-1.conf
 | `--licensing PATTERN` | Filter by licensing (partial match, e.g., "pro", "ultimate") |
 | `--dependencies PATTERN` | Filter by dependencies (partial match, e.g., "cert-manager") |
 | `--check-deployments` | Show AppDeployment status and cluster deployment information |
+| `--generate-block-diagram` | Generate block diagram of ClusterApp dependencies |
 | `--no-color` | Disable colored output |
 | `--summary` | Show only summary statistics (no detailed tables) |
 | `-h, --help` | Show help message |
@@ -630,6 +745,72 @@ By Scope:
 - **Licensing analysis** - Find apps by required licensing tiers
 - **Dependency tracking** - Identify apps that require specific dependencies (e.g., cert-manager, traefik)
 - **Reporting** - Generate summary statistics for documentation
+- **Block diagram generation** - Visualize ClusterApp dependencies with `--generate-block-diagram`
+
+### See Also
+
+- `docs/DEBUGGING-GITOPS.md` - GitOps debugging guide
+- `docs/NKP-RBAC-GUIDE.md` - RBAC guide for NKP
+- `docs/internal/CLUSTERAPP-BLOCK-DIAGRAM.md` - Generated block diagram output (not tracked in git)
+
+---
+
+## generate-clusterapp-block-diagram.py
+
+Generates a visual block diagram showing ClusterApp dependencies. Each app appears once as a block with its dependencies (parents) and dependents (children). Root nodes (apps with no dependencies) start their own chains.
+
+**Note**: This script is integrated into `list-clusterapps-and-apps.sh`. Use `--generate-block-diagram` flag with that script for convenience.
+
+### Usage
+
+```bash
+# Recommended: Use via list-clusterapps-and-apps.sh
+./scripts/list-clusterapps-and-apps.sh --generate-block-diagram
+
+# Or run directly
+python3 scripts/generate-clusterapp-block-diagram.py
+```
+
+The script will:
+1. Fetch all ClusterApps from the management cluster
+2. Parse dependency annotations (`apps.kommander.d2iq.io/dependencies` or `apps.kommander.d2iq.io/required-dependencies`)
+3. Build dependency relationships
+4. Generate a block diagram showing each app with its parents and children
+5. Save output to `docs/internal/CLUSTERAPP-BLOCK-DIAGRAM.md` (not tracked in git)
+
+### Output
+
+The generated diagram shows:
+- **Root chains**: Each root (app with no dependencies) starts its own chain
+- **App blocks**: Each app appears once showing:
+  - Parents (dependencies) above the block
+  - Children (dependents) below the block
+- **Visual structure**: ASCII art blocks with clear parent-child relationships
+
+### Requirements
+
+- Python 3.x
+- kubectl configured with access to management cluster
+- Kubeconfig file at: `/Users/deepak.muley/ws/nkp/dm-nkp-mgmt-1.conf`
+
+### Use Cases
+
+- **Release planning**: Understand dependency chains before upgrades
+- **Troubleshooting**: Identify which apps depend on a failing component
+- **Documentation**: Visual representation of ClusterApp relationships
+- **Impact analysis**: See what apps are affected by changes to a dependency
+
+### Example Output
+
+The diagram organizes apps by root chains. For example:
+- `cert-manager-1.18.2` [ROOT] → `traefik-37.1.2` → `traefik-forward-auth-0.3.16`
+- `kube-prometheus-stack-78.4.0` [ROOT] → `istio-helm-1.23.6` → `jaeger-2.57.3`
+
+### See Also
+
+- `docs/CLUSTERAPP-DEPENDENCY-TREE.md` - Inverted dependency tree diagram
+- `docs/internal/CLUSTERAPP-BLOCK-DIAGRAM.md` - Generated block diagram output (not tracked in git)
+- `list-clusterapps-and-apps.sh` - List all ClusterApps and Apps
 
 ---
 
@@ -841,3 +1022,598 @@ Check the sync status of sealed secrets:
 ./scripts/sealed-secrets.sh status -n dm-dev-workspace
 ./scripts/sealed-secrets.sh status --help
 ```
+
+---
+
+## get-kubescape-cves.sh
+
+Generate CVE reports from kubescape scans on management and workload clusters. Extracts vulnerabilities with severity filtering and generates Jira-friendly markdown reports.
+
+### Usage
+
+```bash
+# Get all CVEs from management cluster (default)
+./scripts/get-kubescape-cves.sh
+./scripts/get-kubescape-cves.sh all mgmt
+
+# Get critical CVEs from management cluster
+./scripts/get-kubescape-cves.sh critical mgmt
+
+# Get high severity CVEs from workload cluster 1
+./scripts/get-kubescape-cves.sh high workload1
+
+# Get critical CVEs from specific namespace(s)
+./scripts/get-kubescape-cves.sh critical mgmt --namespace kommander
+./scripts/get-kubescape-cves.sh high workload1 --namespace default,kube-system
+
+# Get all CVEs from multiple namespaces
+./scripts/get-kubescape-cves.sh all workload2 --namespace dm-dev-workspace,kommander
+
+# Combine severity and namespace filters
+./scripts/get-kubescape-cves.sh critical mgmt --namespace kommander,default
+```
+
+### Command Parameters
+
+| Parameter | Options | Description | Default |
+|-----------|---------|-------------|---------|
+| `severity` | `all`, `critical`, `high`, `medium`, `low` | Filter CVEs by severity level | `all` |
+| `cluster` | `mgmt`, `workload1`, `workload2` | Target cluster to scan | `mgmt` |
+| `--namespace` | Comma-separated namespace list | Filter CVEs by namespace(s) | None (all namespaces) |
+
+### What It Does
+
+1. **Detects kubescape**: Checks for kubescape CLI or operator installation
+2. **Scans cluster**: Runs kubescape scan or queries operator CRDs
+3. **Filters by severity**: Extracts CVEs matching the specified severity level
+4. **Filters by namespace**: Optionally filters CVEs by one or more namespaces
+5. **Displays report**: Shows formatted CVE report in terminal
+6. **Generates Jira report**: Creates markdown file ready for Jira upload
+
+### Output
+
+The script generates two outputs:
+
+1. **Terminal Display**: Color-coded CVE report with:
+   - Summary counts by severity
+   - Detailed findings grouped by severity
+   - Component information (namespace, kind, name, image)
+   - CVE descriptions
+
+2. **Jira Report File**: Markdown file named:
+   ```
+   kubescape-cve-report-{cluster}-{severity}-{timestamp}.md
+   kubescape-cve-report-{cluster}-{severity}-ns-{namespaces}-{timestamp}.md  # When namespace filter is used
+   ```
+
+### Sample Output
+
+```
+════════════════════════════════════════════════════════════════
+  CVE Report - Management Cluster (dm-nkp-mgmt-1) (Severity: CRITICAL)
+════════════════════════════════════════════════════════════════
+
+Summary:
+  Critical: 5
+  High: 12
+  Medium: 8
+  Low: 3
+
+────────────────────────────────────────────────────────────────
+🔴 CRITICAL
+────────────────────────────────────────────────────────────────
+
+CVE: CVE-2024-12345
+Severity: critical
+Component: nginx
+Namespace: default
+Kind: Pod
+Image: nginx:1.21.0
+Description: Remote code execution vulnerability in nginx
+────────────────────────────────────────────────────────────────
+```
+
+### Jira Report Format
+
+The generated markdown report includes:
+
+- **Summary table** with CVE counts by severity
+- **Detailed findings** in table format with:
+  - CVE ID
+  - Component name
+  - Namespace
+  - Resource kind
+  - Container image
+  - Description
+
+### Requirements
+
+- `kubectl` - Must be installed and configured
+- `jq` - JSON processor (install via `brew install jq` on macOS)
+- `kubescape` CLI (optional) - If not installed, script will try to use kubescape operator CRDs
+- Access to cluster kubeconfig files
+
+### Kubeconfig Locations
+
+The script automatically uses the correct kubeconfig:
+
+| Cluster | Kubeconfig Path |
+|---------|-----------------|
+| `mgmt` | `/Users/deepak.muley/ws/nkp/dm-nkp-mgmt-1.conf` |
+| `workload1` | `/Users/deepak.muley/ws/nkp/dm-nkp-workload-1.kubeconfig` |
+| `workload2` | `/Users/deepak.muley/ws/nkp/dm-nkp-workload-2.kubeconfig` |
+
+### Installation
+
+If kubescape CLI is not installed:
+
+```bash
+# macOS
+brew install kubescape
+
+# Linux
+curl -s https://raw.githubusercontent.com/kubescape/kubescape/master/install.sh | /bin/bash
+
+# Or visit: https://kubescape.io/docs/install-cli/
+```
+
+### Use Cases
+
+- **Security audits**: Identify all critical CVEs across clusters
+- **Namespace-specific scans**: Focus on CVEs in specific namespaces (e.g., production workloads)
+- **Compliance reporting**: Generate CVE reports for compliance requirements
+- **Jira tickets**: Upload markdown reports directly to Jira issues
+- **Remediation planning**: Prioritize fixes based on severity and namespace
+- **Component tracking**: Identify which components need updates
+- **Multi-namespace analysis**: Compare CVEs across multiple namespaces
+
+### Tips
+
+- Run with `all` severity first to get a complete picture
+- Use `critical` and `high` for immediate action items
+- The Jira report can be copied directly into Jira markdown fields
+- Reports are timestamped for tracking changes over time
+
+---
+
+## pod-security-audit.sh
+
+Comprehensive pod security testing tool that performs container escape attempts, security hardening checks, and security context analysis. Generates detailed reports with security recommendations.
+
+### Usage
+
+```bash
+# Run all tests (default)
+./scripts/pod-security-audit.sh --namespace <ns> --pod <pod-name>
+./scripts/pod-security-audit.sh -n kommander -p kommander-appmanagement-8cfbc8f4f-bs9fl
+
+# Run specific test type
+./scripts/pod-security-audit.sh --namespace default --pod my-pod --test-type escape
+./scripts/pod-security-audit.sh -n kommander -p my-pod -t hardening
+./scripts/pod-security-audit.sh --namespace default --pod my-pod --test-type context
+
+# Specify kubeconfig
+./scripts/pod-security-audit.sh --namespace default --pod my-pod --kubeconfig /path/to/kubeconfig
+./scripts/pod-security-audit.sh -n kommander -p my-pod -k /Users/deepak.muley/ws/nkp/dm-nkp-mgmt-1.conf
+
+# Export fixed YAML
+./scripts/pod-security-audit.sh --namespace kommander --pod my-pod --export fixed-deployment.yaml
+./scripts/pod-security-audit.sh -n default -p my-pod -o pod-fixed.yaml -k /path/to/kubeconfig
+
+# Examples
+./scripts/pod-security-audit.sh --namespace kommander --pod kommander-appmanagement-xxx --test-type all
+./scripts/pod-security-audit.sh -n default -p test-pod -t escape -k /Users/deepak.muley/ws/nkp/dm-nkp-mgmt-1.conf
+./scripts/pod-security-audit.sh -n kommander -p my-pod --export fixed.yaml
+```
+
+### Command Options
+
+| Option | Short | Description | Required |
+|--------|-------|-------------|----------|
+| `--namespace` | `-n` | Kubernetes namespace | Yes |
+| `--pod` | `-p` | Name of the pod to test | Yes |
+| `--test-type` | `-t` | Type of test to run (escape, hardening, context, all) | No (default: all) |
+| `--kubeconfig` | `-k` | Path to kubeconfig file | No |
+| `--help` | `-h` | Show help message | No |
+
+### Test Types
+
+| Test Type | Description |
+|-----------|-------------|
+| `escape` | Attempts container escape techniques (nsenter, unshare, host filesystem access, etc.) |
+| `hardening` | Checks security hardening (non-root, capabilities, seccomp, dangerous binaries) |
+| `context` | Analyzes security context configuration (pod and container level) |
+| `all` | Runs all tests plus generates security recommendations (default) |
+
+### What It Tests
+
+#### Escape Tests
+- **Host namespace access**: Checks if pod can access host PID/IPC/network namespaces
+- **nsenter escape**: Attempts to escape to host namespace using `nsenter`
+- **User namespace privilege escalation**: Tests `unshare` for privilege escalation
+- **Host filesystem access**: Checks access to host filesystem via `/proc/1/root`
+- **Overlay filesystem inspection**: Examines overlay filesystem paths
+- **Container runtime socket access**: Checks for Docker/containerd socket access
+- **HostPath volume mounts**: Identifies hostPath volumes
+
+#### Hardening Checks
+- **Root execution**: Verifies container runs as non-root
+- **Capabilities**: Checks if all capabilities are dropped
+- **Dangerous binaries**: Identifies availability of `nsenter`, `chroot`, `mount`, `unshare`, etc.
+- **Seccomp**: Verifies seccomp profile is enabled
+- **NoNewPrivs**: Checks if NoNewPrivs is enabled
+
+#### Security Context Analysis
+- **Pod-level**: `runAsUser`, `runAsNonRoot`, `hostPID`, `hostIPC`, `hostNetwork`, `seccompProfile`
+- **Container-level**: `privileged`, `allowPrivilegeEscalation`, `readOnlyRootFilesystem`, `capabilities`
+- **Recommendations**: Generates YAML with recommended security context configuration
+
+### Output
+
+The script provides color-coded output:
+
+- ✓ **Green (PASS)**: Security check passed
+- ✗ **Red (FAIL)**: Security issue found
+- ⚠ **Yellow (WARN)**: Potential security concern
+- ℹ **Cyan (INFO)**: Informational message
+
+### Sample Output
+
+```
+═══════════════════════════════════════════════════════════════
+Security Context Analysis
+═══════════════════════════════════════════════════════════════
+
+Pod-Level Security Context:
+✓ Pod runs as non-root (UID: 65532)
+✓ hostPID is disabled
+✓ hostIPC is disabled
+✓ hostNetwork is disabled
+
+Container-Level Security Context:
+  Container: manager
+✓ Container is not privileged
+✓ Privilege escalation disabled
+⚠ Root filesystem is writable
+✓ Container drops 0 capabilities
+
+═══════════════════════════════════════════════════════════════
+Container Escape Attempts
+═══════════════════════════════════════════════════════════════
+
+Test 1: Host Namespace Access
+✓ Cannot read host namespace symlinks (Permission denied)
+
+Test 2: nsenter to Host Namespace
+✓ nsenter escape blocked (Operation not permitted)
+
+Test 3: User Namespace Privilege Escalation
+⚠ Can create user namespace with root (UID 0) - partial privilege escalation
+⚠ Can mount tmpfs in user namespace
+
+Test 4: Host Filesystem Access
+✓ Host filesystem access via /proc blocked
+
+═══════════════════════════════════════════════════════════════
+Security Recommendations
+═══════════════════════════════════════════════════════════════
+
+Recommended Security Context Configuration:
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: my-pod
+  namespace: default
+spec:
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 65532
+    ...
+```
+
+### Requirements
+
+- `kubectl` - Must be installed and configured
+- `jq` - JSON processor (install via `brew install jq` on macOS)
+- Access to the target cluster
+
+### Export Feature
+
+The `--export` or `-o` option generates a YAML file with security fixes applied:
+
+```bash
+# Export fixed Deployment YAML
+./scripts/pod-security-audit.sh -n kommander -p my-pod --export fixed-deployment.yaml
+
+# Export fixed Pod YAML
+./scripts/pod-security-audit.sh -n default -p my-pod -o pod-fixed.yaml
+```
+
+**What gets exported:**
+- Automatically detects if pod is managed by Deployment, StatefulSet, or DaemonSet
+- Applies security context fixes to both pod and container levels
+- Removes runtime metadata (status, uid, resourceVersion, etc.)
+- Ready to check in to GitOps repository after review
+
+**Security fixes applied:**
+- `runAsNonRoot: true` and appropriate `runAsUser`
+- `allowPrivilegeEscalation: false`
+- `readOnlyRootFilesystem: true` (may need manual adjustment)
+- `capabilities.drop: ["ALL"]`
+- `seccompProfile.type: RuntimeDefault`
+- `hostPID`, `hostIPC`, `hostNetwork: false`
+
+**Note:** Review the exported YAML before applying, especially:
+- `readOnlyRootFilesystem` may need to be `false` if the app requires writes
+- Some apps may need specific capabilities (rare)
+- Volume mounts and other configurations are preserved
+
+### Use Cases
+
+- **Security audits**: Comprehensive security assessment of pods
+- **Compliance checks**: Verify pods meet security standards
+- **Pre-deployment validation**: Test pods before production deployment
+- **Incident response**: Investigate potential security breaches
+- **Security training**: Understand container security boundaries
+- **CI/CD integration**: Automate security checks in pipelines
+- **GitOps integration**: Export fixed YAML for check-in to repository
+
+### Tips
+
+- Run with `all` first to get a complete security picture
+- Use `escape` to test container isolation
+- Use `hardening` for quick security posture check
+- Use `context` to analyze and improve security configurations
+- The recommendations section provides ready-to-use YAML for security improvements
+- Use `--export` to generate fixed YAML ready for GitOps check-in
+- All tests are non-destructive (read-only operations)
+- Review exported YAML before applying, especially `readOnlyRootFilesystem`
+
+---
+
+## nkp-pentest-suite.sh
+
+Comprehensive penetration testing suite for NKP Kubernetes clusters. Performs automated security testing across multiple phases including discovery, credential extraction, RBAC testing, security context analysis, network security, and Nutanix component-specific tests.
+
+### Why Is This Needed?
+
+Regular security testing is critical for maintaining a secure Kubernetes platform. This script automates:
+- Discovery of all cluster resources and components
+- Identification of security misconfigurations
+- Testing of RBAC permissions
+- Analysis of security contexts
+- Network security assessment
+- Nutanix component-specific security testing
+
+### Usage
+
+```bash
+# Run full pentest suite (uses default kubeconfig)
+./scripts/nkp-pentest-suite.sh
+
+# Test specific namespace
+./scripts/nkp-pentest-suite.sh --namespace dm-dev-workspace
+
+# Use specific kubeconfig
+./scripts/nkp-pentest-suite.sh --kubeconfig /path/to/kubeconfig
+
+# Custom output directory
+./scripts/nkp-pentest-suite.sh --output ./my-pentest-results
+
+# Verbose output
+./scripts/nkp-pentest-suite.sh --verbose
+
+# Combine options
+./scripts/nkp-pentest-suite.sh \
+  --kubeconfig /Users/deepak.muley/ws/nkp/dm-nkp-mgmt-1.conf \
+  --namespace kommander \
+  --output ./kommander-pentest \
+  --verbose
+
+# Help
+./scripts/nkp-pentest-suite.sh --help
+```
+
+### Command Options
+
+| Option | Description |
+|--------|-------------|
+| `--kubeconfig <path>` | Path to kubeconfig file |
+| `--namespace <ns>` | Target specific namespace (default: all namespaces) |
+| `--output <dir>` | Output directory for results (default: `./pentest-results-YYYYMMDD-HHMMSS`) |
+| `--verbose, -v` | Enable verbose output |
+| `--help, -h` | Show help message |
+
+### Testing Phases
+
+The script runs 6 comprehensive testing phases:
+
+#### Phase 1: Discovery
+- Cluster information and node enumeration
+- Namespace discovery
+- Pod and service enumeration
+- Service account discovery
+- Nutanix component identification (Kommander, CAPX, CAREN, etc.)
+
+#### Phase 2: Credential Extraction
+- Secret enumeration across all namespaces
+- Nutanix-specific credential discovery (Prism Central, CCM, CSI)
+- Service account token extraction
+- Sealed secrets identification
+
+#### Phase 3: RBAC Testing
+- Cluster role and role binding analysis
+- Cluster-admin binding identification
+- Wildcard permission detection
+- Service account permission testing
+- Cross-namespace access testing
+
+#### Phase 4: Security Context Testing
+- Privileged container identification
+- Host network pod discovery
+- Host path volume enumeration
+- Dangerous capability detection
+- Root container identification
+
+#### Phase 5: Network Security Testing
+- Network policy analysis
+- Exposed service identification (LoadBalancer, NodePort)
+- External IP detection
+- Ingress resource analysis
+
+#### Phase 6: Nutanix Component-Specific Tests
+- Kommander security analysis
+- CAPX (Cluster API Provider) testing
+- CAREN (Runtime Extensions) webhook analysis
+- Nutanix CCM credential testing
+- Nutanix CSI security assessment
+
+### Output
+
+The script generates comprehensive reports in the output directory:
+
+```
+pentest-results-20250127-143022/
+├── pentest.log                    # Full execution log
+├── SUMMARY.txt                    # Executive summary
+├── cluster-info.txt               # Cluster information
+├── nodes.txt                      # Node details
+├── namespaces.json                # All namespaces
+├── pods.json                      # All pods (JSON)
+├── pods.txt                       # All pods (readable)
+├── services.json                  # All services
+├── services.txt                   # All services (readable)
+├── serviceaccounts.json           # All service accounts
+├── secrets.json                   # All secrets
+├── secrets.txt                    # All secrets (readable)
+├── nutanix-components.txt         # Nutanix component inventory
+├── nutanix-secrets.txt            # Nutanix credential locations
+├── sa-tokens.txt                  # Service account tokens
+├── clusterroles.json              # Cluster roles
+├── clusterrolebindings.json       # Cluster role bindings
+├── rbac-analysis.txt              # RBAC findings
+├── sa-permissions.txt             # Service account permissions
+├── privileged-pods.txt            # Privileged containers
+├── hostnetwork-pods.txt           # Host network pods
+├── hostpath-volumes.txt           # Host path volumes
+├── dangerous-capabilities.txt      # Dangerous capabilities
+├── root-containers.txt            # Root containers
+├── security-context-summary.txt   # Security context summary
+├── networkpolicies.json           # Network policies
+├── networkpolicies.txt            # Network policies (readable)
+├── exposed-services.txt           # Exposed services
+├── ingress.json                   # Ingress resources
+├── ingress.txt                   # Ingress resources (readable)
+├── kommander-analysis.txt         # Kommander security analysis
+├── capx-analysis.txt             # CAPX security analysis
+├── caren-analysis.txt            # CAREN security analysis
+├── ccm-analysis.txt              # CCM security analysis
+└── csi-analysis.txt              # CSI security analysis
+```
+
+### Sample Output
+
+```
+[INFO] Starting NKP Penetration Testing Suite
+[INFO] Output directory: ./pentest-results-20250127-143022
+[SUCCESS] Prerequisites check passed
+[INFO] === Phase 1: Discovery ===
+[INFO] Collecting cluster information...
+[INFO] Enumerating namespaces...
+[SUCCESS] Discovery phase complete
+[INFO] === Phase 2: Credential Extraction ===
+[INFO] Enumerating secrets...
+[INFO] Searching for Nutanix credentials...
+[SUCCESS] Credential extraction phase complete
+...
+[SUCCESS] Penetration testing suite complete!
+[INFO] Results available in: ./pentest-results-20250127-143022
+[WARN] Review findings and remediate security issues
+```
+
+### Summary Report
+
+The `SUMMARY.txt` file provides an executive overview:
+
+```
+=== NKP Penetration Testing Summary ===
+Date: 2025-01-27 14:30:22
+Cluster: dm-nkp-mgmt-1
+
+=== Findings Summary ===
+
+Discovery:
+  - Namespaces: 25
+  - Pods: 156
+  - Services: 89
+
+Security Issues:
+  - Privileged Pods: 12
+  - Host Network Pods: 8
+  - Root Containers: 45
+  - Dangerous Capabilities: 23
+
+RBAC:
+  - Cluster Admin Bindings: 3
+
+Network:
+  - LoadBalancer Services: 5
+  - NodePort Services: 2
+```
+
+### Requirements
+
+- `kubectl` - Must be installed and configured
+- `jq` - JSON processor (install via `brew install jq` on macOS)
+- Access to target cluster via kubeconfig
+
+### Use Cases
+
+- **Security audits**: Comprehensive security assessment of NKP clusters
+- **Compliance checks**: Verify clusters meet security standards
+- **Pre-deployment validation**: Test clusters before production
+- **Incident response**: Investigate potential security breaches
+- **Regular security reviews**: Scheduled security assessments
+- **Nutanix component security**: Focused testing on NKP components
+
+### Integration with Other Tools
+
+The pentest suite complements other security tools:
+
+```bash
+# Run pentest suite
+./scripts/nkp-pentest-suite.sh
+
+# Then run kubescape for CVE scanning
+kubescape scan framework nsa
+
+# Run kubeaudit for additional checks
+kubeaudit all
+
+# Check policy violations
+./scripts/check-violations.sh mgmt
+```
+
+### Tips
+
+- Run regularly (e.g., monthly) to track security posture over time
+- Compare results across clusters to identify patterns
+- Focus on critical findings first (privileged pods, cluster-admin bindings)
+- Use namespace filtering for targeted testing
+- Review Nutanix component-specific findings carefully
+- Integrate into CI/CD pipelines for automated security testing
+
+### See Also
+
+- `docs/BLACK-HAT-PENETRATION-TESTING-GUIDE.md` - Comprehensive penetration testing guide
+- `docs/PENTEST-QUICK-REFERENCE.md` - Quick reference for common tests
+- `docs/SECURITY-FIX-VALIDATION-GUIDE.md` - Guide on validating security fixes
+- `check-violations.sh` - Check Gatekeeper policy violations
+- `pod-security-audit.sh` - Individual pod security testing
+
+---
+
+## Legal Disclaimer
+
+⚠️ **IMPORTANT**: The penetration testing suite (`nkp-pentest-suite.sh`) is for authorized security testing only. Unauthorized access to computer systems is illegal and may result in criminal prosecution. Always obtain written authorization before performing penetration testing.

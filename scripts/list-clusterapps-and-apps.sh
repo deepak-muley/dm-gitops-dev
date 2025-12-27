@@ -16,6 +16,7 @@
 #   --licensing PATTERN  Filter by licensing (partial match, e.g., "pro", "ultimate")
 #   --dependencies PATTERN Filter by dependencies (partial match, e.g., "cert-manager")
 #   --check-deployments  Show AppDeployment status and cluster deployment info
+#   --generate-block-diagram  Generate block diagram of ClusterApp dependencies
 #   --no-color           Disable colored output
 #   --summary            Show only summary statistics
 #   -h, --help           Show this help message
@@ -47,6 +48,7 @@ FILTER_TYPE=""
 FILTER_LICENSING=""
 FILTER_DEPENDENCIES=""
 CHECK_DEPLOYMENTS=false
+GENERATE_BLOCK_DIAGRAM=false
 NO_COLOR=false
 SUMMARY_ONLY=false
 
@@ -85,6 +87,10 @@ while [[ $# -gt 0 ]]; do
       CHECK_DEPLOYMENTS=true
       shift
       ;;
+    --generate-block-diagram)
+      GENERATE_BLOCK_DIAGRAM=true
+      shift
+      ;;
     --no-color)
       NO_COLOR=true
       shift
@@ -109,6 +115,7 @@ Options:
   --licensing PATTERN  Filter by licensing (partial match, e.g., "pro", "ultimate")
   --dependencies PATTERN Filter by dependencies (partial match, e.g., "cert-manager")
   --check-deployments  Show AppDeployment status and cluster deployment info
+  --generate-block-diagram  Generate block diagram of ClusterApp dependencies
   --no-color           Disable colored output
   --summary            Show only summary statistics
   -h, --help           Show this help message
@@ -141,6 +148,9 @@ Examples:
   # Check deployment status
   $0 --check-deployments --name cert-manager
   $0 --check-deployments --kind ClusterApp
+
+  # Generate block diagram
+  $0 --generate-block-diagram
 EOF
       exit 0
       ;;
@@ -608,4 +618,39 @@ if [ -s "$TEMP_DIR/scopes.txt" ]; then
   sort "$TEMP_DIR/scopes.txt" | uniq -c | sort -rn | while read -r count scope; do
     printf "  ${MAGENTA}%-20s${NC}: ${GREEN}%3d${NC}\n" "$scope" "$count"
   done
+fi
+
+# Generate block diagram if requested
+if [ "$GENERATE_BLOCK_DIAGRAM" = true ]; then
+  echo ""
+  print_color "${BOLD}${CYAN}" "Generating ClusterApp dependency block diagram..."
+  echo ""
+
+  # Get script directory
+  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  PYTHON_SCRIPT="$SCRIPT_DIR/generate-clusterapp-block-diagram.py"
+
+  if [ ! -f "$PYTHON_SCRIPT" ]; then
+    print_color "${RED}" "Error: Python script not found at $PYTHON_SCRIPT"
+    exit 1
+  fi
+
+  # Check if Python 3 is available
+  if ! command -v python3 &> /dev/null; then
+    print_color "${RED}" "Error: python3 is not installed or not in PATH"
+    exit 1
+  fi
+
+  # Run the Python script
+  python3 "$PYTHON_SCRIPT"
+
+  if [ $? -eq 0 ]; then
+    echo ""
+    print_color "${GREEN}" "✓ Block diagram generated successfully!"
+    print_color "${CYAN}" "  Output: docs/internal/CLUSTERAPP-BLOCK-DIAGRAM.md"
+    print_color "${YELLOW}" "  Note: This file is in .gitignore and will not be committed"
+  else
+    print_color "${RED}" "✗ Failed to generate block diagram"
+    exit 1
+  fi
 fi
