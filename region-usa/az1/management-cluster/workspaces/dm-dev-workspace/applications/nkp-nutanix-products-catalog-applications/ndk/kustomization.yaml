@@ -6,6 +6,4 @@ resources:
   # NDK App Deployment
   - ndk-2.0.0.yaml
   - ndk-2.0.0-config-overrides.yaml
-  # Sealed secret for management cluster (dm-dev-workspace)
-  - ndk-image-pull-sealed-secret.yaml
 

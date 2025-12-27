@@ -1,0 +1,170 @@
+# Example: kommander-appmanagement Deployment with Perfect 9/9 Kubesec Score
+# This shows all the additions needed to go from 8/9 to 9/9
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kommander-appmanagement
+  namespace: kommander
+  annotations:
+    # ✅ RECOMMENDATION #1: AppArmor Profile
+    # Add AppArmor annotation for each container
+    container.apparmor.security.beta.kubernetes.io/manager: runtime/default
+    container.apparmor.security.beta.kubernetes.io/kube-rbac-proxy: runtime/default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: kommander-appmanagement
+      app.kubernetes.io/name: kommander-appmanagement-chart
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: kommander-appmanagement
+        app.kubernetes.io/name: kommander-appmanagement-chart
+      annotations:
+        # ✅ RECOMMENDATION #1: AppArmor Profile (template level)
+        container.apparmor.security.beta.kubernetes.io/manager: runtime/default
+        container.apparmor.security.beta.kubernetes.io/kube-rbac-proxy: runtime/default
+    spec:
+      # ✅ RECOMMENDATION #2: Disable automount ServiceAccount Token
+      # Only set to false if the pod doesn't need Kubernetes API access
+      # For kommander-appmanagement, it might need API access, so you may need to keep this as true
+      # automountServiceAccountToken: false
+
+      # ✅ RECOMMENDATION #3: Use User Namespaces (Kubernetes 1.25+)
+      # This isolates UIDs from the host
+      hostUsers: false
+
+      securityContext:
+        # ✅ RECOMMENDATION #4: Seccomp Profile (pod-level)
+        seccompProfile:
+          type: RuntimeDefault
+
+        # ✅ RECOMMENDATION #5: High UID Group (>10000)
+        # Changed from 65532 to 65534 (nobody group, >10000)
+        runAsGroup: 65534
+        fsGroup: 65534
+
+        # ✅ RECOMMENDATION #6: Run as Non-Root
+        runAsNonRoot: true
+        runAsUser: 65532
+
+        # ✅ RECOMMENDATION #1: AppArmor Profile (pod-level, optional)
+        appArmorProfile:
+          type: RuntimeDefault
+
+      containers:
+      - name: manager
+        image: mesosphere/kommander2-appmanagement:v2.17.0
+        args:
+          - --enable-leader-election
+
+        securityContext:
+          # ✅ RECOMMENDATION #1: AppArmor Profile (container-level)
+          appArmorProfile:
+            type: RuntimeDefault
+
+          # ✅ RECOMMENDATION #4: Seccomp Profile (container-level)
+          seccompProfile:
+            type: RuntimeDefault
+
+          # ✅ RECOMMENDATION #5: High UID Group (container-level)
+          runAsGroup: 65534
+
+          # ✅ RECOMMENDATION #6: Run as Non-Root (container-level)
+          runAsNonRoot: true
+          runAsUser: 65532
+
+          # ✅ RECOMMENDATIONS #7 & #8: Drop ALL Capabilities
+          capabilities:
+            drop:
+              - ALL
+
+          # ✅ RECOMMENDATION #9: Read-Only Root Filesystem
+          readOnlyRootFilesystem: true
+
+          # Additional security (already present)
+          allowPrivilegeEscalation: false
+          privileged: false
+
+        # Volume mounts for writable directories (needed for readOnlyRootFilesystem)
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: var-run
+          mountPath: /var/run
+        - name: var-log
+          mountPath: /var/log
+
+        resources:
+          limits:
+            cpu: "1"
+            memory: 512Mi
+          requests:
+            cpu: 200m
+            memory: 128Mi
+
+      - name: kube-rbac-proxy
+        image: quay.io/brancz/kube-rbac-proxy:v0.19.1
+        args:
+          - --secure-listen-address=0.0.0.0:8443
+          - --upstream=http://127.0.0.1:8080/
+          - --logtostderr=true
+          - --ignore-paths=/metrics
+          - --v=10
+
+        securityContext:
+          # ✅ RECOMMENDATION #1: AppArmor Profile (container-level)
+          appArmorProfile:
+            type: RuntimeDefault
+
+          # ✅ RECOMMENDATION #4: Seccomp Profile (container-level)
+          seccompProfile:
+            type: RuntimeDefault
+
+          # ✅ RECOMMENDATION #5: High UID Group (container-level)
+          runAsGroup: 65534
+
+          # ✅ RECOMMENDATION #6: Run as Non-Root (container-level)
+          runAsNonRoot: true
+          runAsUser: 65532
+
+          # ✅ RECOMMENDATIONS #7 & #8: Drop ALL Capabilities
+          capabilities:
+            drop:
+              - ALL
+
+          # ✅ RECOMMENDATION #9: Read-Only Root Filesystem
+          readOnlyRootFilesystem: true
+
+          # Additional security
+          allowPrivilegeEscalation: false
+          privileged: false
+
+        # Volume mounts for writable directories
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: var-run
+          mountPath: /var/run
+        - name: var-log
+          mountPath: /var/log
+
+        ports:
+        - containerPort: 8443
+          name: https
+        - containerPort: 8080
+          name: metrics
+
+      # Volumes for writable directories (required for readOnlyRootFilesystem)
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      - name: var-run
+        emptyDir: {}
+      - name: var-log
+        emptyDir: {}
+
+      serviceAccountName: kommander-appmanagement
+

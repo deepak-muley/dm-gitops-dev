@@ -4,6 +4,7 @@ resources:
   # Dependencies for nkp-insights (deploy these first)
   - kube-prometheus-stack
   - cloudnative-pg
+  - harbor
   # NKP Insights (depends on prometheus and cloudnative-pg)
   - nkp-insights
   # DISABLED: rook-ceph
